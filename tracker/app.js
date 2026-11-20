@@ -248,6 +248,7 @@
     const ci = st.coreIntegration || {};
     const coreLabels = [
       ["בירד-דוג", ci.birdDog],
+      ["דד-באג (Dead Bug)", ci.deadBug],
       ["פלאנק", ci.plank],
       ["הרמות רגליים בשכיבה (ידיים מתחת לטוסיק)", ci.lyingLegRaises],
       ["הרמות אגן על הצד / פלאנק צידי", ci.sideHipRaises],
@@ -531,17 +532,17 @@
       date: todayISO(),
       stage: state.currentStageId,
       mode: "פיזיו רגיל",
-      session: "חמישיית הבסיס",
+      session: "שישיית הבסיס",
       pain: 1,
       nextDay: "ירוק",
       energy: 4,
       exercises: baseList.map((e) => e.name),
-      notes: "ביצוע חמישיית הפיזיותרפיה הרגילה (Bird-Dog, פלאנק, קוברה, הרמות רגליים, הרמות אגן)"
+      notes: "ביצוע שישיית הפיזיותרפיה הרגילה (Bird-Dog, Dead Bug, פלאנק, קוברה, הרמות רגליים, הרמות אגן)"
     });
     saveState();
     renderAll();
     playBeep(2);
-    showToast("✅ נרשמו כל 5 תרגילי הפיזיותרפיה הרגילים להיום!");
+    showToast("✅ נרשמו כל 6 תרגילי הפיזיותרפיה הרגילים להיום!");
   }
 
   function logSwimming() {
@@ -749,7 +750,7 @@
     const modeKey = state.mode === "mode60" ? "mode60" : "mode30";
 
     if (preset === "baseline") {
-      openCoachWithQueue(baseQueue, "חמישיית הפיזיותרפיה הבסיסית");
+      openCoachWithQueue(baseQueue, "שישיית הפיזיותרפיה הבסיסית");
       return;
     }
     if (preset === "emergency") {
