@@ -2,8 +2,14 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>אטלס-פיזיו | מאמן מודרך, הדמיה חיה ומוכנות למילואים</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1224">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>אטלס-פיזיו | מאמן מודרך, הדמיה חיה וסנכרון לסלולרי</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/svg+xml" href="./icon.svg">
+  <link rel="apple-touch-icon" href="./icon.svg">
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
@@ -11,17 +17,31 @@
   <div class="music-bar">
     <div class="music-bar-inner">
       <div class="music-controls">
-        <span class="music-badge">🎵 מוזיקה לאימון</span>
-        <button class="btn small primary" id="musicPlayPauseBtn">▶️ נגן ניגון</button>
-        <select id="musicTrackSelect" aria-label="בחירת ניגון אופליין"></select>
+        <span class="music-badge">🎵 מוזיקה</span>
+        <button class="btn small primary" id="musicPlayPauseBtn">▶️ נגן מוזיקה</button>
+        <select id="musicSourceSelect" aria-label="בחירת מקור מוזיקה">
+          <option value="youtube">📺 יוטיוב (צמאה / הרב קוק)</option>
+          <option value="synth">🎶 ניגון אופליין מובנה</option>
+          <option value="local">📁 קבצי MP3 מהמכשיר</option>
+        </select>
+        <select id="musicTrackSelect" aria-label="בחירת שיר או ניגון"></select>
         <label style="display:inline-flex; align-items:center; gap:5px; font-size:0.82rem; color:var(--text-muted);">
           🔊
-          <input type="range" id="musicVolumeInput" min="0" max="100" value="45" style="width:78px; padding:0;">
+          <input type="range" id="musicVolumeInput" min="0" max="100" value="55" style="width:72px; padding:0;">
         </label>
-        <span class="muted" id="musicNowPlayingLabel" style="font-size:0.82rem;"></span>
+        <span class="muted" id="musicNowPlayingLabel" style="font-size:0.8rem;"></span>
       </div>
       <div class="music-sources">
-        <button class="btn small" id="musicMoreBtn">🎧 צמאה / הרב קוק / MP3 ▾</button>
+        <button class="btn small" id="musicMoreBtn">🎧 פלייליסט / MP3 ▾</button>
+      </div>
+    </div>
+
+    <div class="yt-player-wrap" id="ytPlayerWrap">
+      <div class="yt-iframe-host" id="ytIframeHost"></div>
+      <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-start;">
+        <strong style="font-size:0.9rem;">📺 נגן צמאה / ניגוני הרב קוק פעיל ברקע</strong>
+        <span class="muted" style="font-size:0.8rem;">הפלייליסט ממשיך אוטומטית לשיר הבא במהלך האימון.</span>
+        <button class="btn small danger-outline" id="ytHideMiniBtn">⏹️ סגור נגן יוטיוב</button>
       </div>
     </div>
 
@@ -29,15 +49,16 @@
       <div class="music-yt-row" id="youtubeQuickLinks"></div>
       <div class="music-sources">
         <label class="btn small" style="cursor:pointer;">
-          📁 טען שירי MP3 מהמחשב
+          📁 טען שירי MP3
           <input type="file" id="localMp3Input" accept="audio/*" multiple style="display:none;">
         </label>
         <button class="btn small" id="musicPrevBtn">⏮️</button>
         <button class="btn small" id="musicNextBtn">⏭️</button>
-        <input type="url" id="customPlaylistUrlInput" placeholder="הדבק קישור פלייליסט יוטיוב/ספוטיפיי אישי" style="width:240px;">
-        <button class="btn small primary" id="openCustomPlaylistBtn">פתח פלייליסט</button>
+        <input type="url" id="customPlaylistUrlInput" placeholder="הדבק קישור סרטון/פלייליסט יוטיוב אישי" style="width:230px;">
+        <button class="btn small primary" id="applyCustomYtBtn">נגן קישור כאן</button>
+        <button class="btn small" id="openCustomPlaylistBtn">פתח בלשונית</button>
         <label style="display:inline-flex; align-items:center; gap:5px; font-size:0.82rem; color:var(--text-muted);">
-          <input type="checkbox" id="autoMusicCoachCheck" checked> הפעל מוזיקה אוטומטית במצב מאמן
+          <input type="checkbox" id="autoMusicCoachCheck" checked> נגן אוטומטית בהתחלת אימון מודרך
         </label>
       </div>
     </div>
@@ -48,9 +69,10 @@
       <div class="hero-top">
         <div>
           <h1>אטלס-פיזיו: מאמן כושר ופיזיותרפיה מודרך (10 שלבים)</h1>
-          <p class="subtitle">הדמיית תנועה חיה • שימור כל תרגילי הבסיס + היפר-לורדוזיס קלה • הכנה למילואים • עובד 100% אופליין</p>
+          <p class="subtitle">הדמיה חיה • שמירת כל 6 תרגילי הבסיס • אפס ציוד בבית + מתח 1–2×/שבוע • מותאם לסלולרי</p>
         </div>
         <div class="badges-row">
+          <button class="pill accent" id="syncStatusBtn" title="חיבור סנכרון אוטומטי בין הטלפון למחשב">☁️ סנכרון טלפון-מחשב</button>
           <span class="pill green" id="streakBadge">⚡ מוכן לאימון</span>
           <span class="pill accent" id="activeStageBadge">שלב נוכחי: 1 / 10</span>
           <span class="pill purple" id="totalLogsBadge">סה"כ אימונים: 0</span>
@@ -78,20 +100,20 @@
     <!-- 1-Click Action Bar -->
     <section class="quick-bar" aria-label="פעולות מהירות בקליק">
       <button class="quick-btn coach-hero" id="quickStartCoachBtn">
-        <strong>🎬 התחל אימון מודרך (מצב מאמן)</strong>
-        <span>הדמיית דמות מוגדלת + טיימר 3-2-1 + סימון אוטומטי</span>
+        <strong>🎬 התחל אימון מודרך</strong>
+        <span>הדמיה חיה + מנוחה אוטומטית + מוזיקה</span>
       </button>
       <button class="quick-btn physio-done" id="quickLogPhysioBtn">
-        <strong>🧱 ביצעתי פיזיותרפיה רגילה (ה-6 שלי)</strong>
-        <span>מסמן Bird-Dog, Dead Bug, פלאנק, קוברה, הרמות רגליים והרמות אגן</span>
+        <strong>🧱 ביצעתי פיזיו רגיל (6)</strong>
+        <span>Bird-Dog, Dead Bug, פלאנק, קוברה, רגליים, אגן</span>
       </button>
       <button class="quick-btn swim-done" id="quickLogSwimBtn">
-        <strong>🏊 ביצעתי שחייה (30 דק' חתירה)</strong>
-        <span>תיעוד אימון שחייה שבועי והעלאת מונה החיוניות</span>
+        <strong>🏊 ביצעתי שחייה (30 דק')</strong>
+        <span>שומר אימון שחייה ומעלה מונה</span>
       </button>
       <button class="quick-btn emergency-done" id="quickLogEmergencyBtn">
         <strong>⚡ ביצעתי חירום 5 דק'</strong>
-        <span>שמירת רצף ביום עמוס ('לא מפספסים פעמיים')</span>
+        <span>שומר רצף ביום עמוס בבית</span>
       </button>
     </section>
 
@@ -112,15 +134,14 @@
     <nav class="tabs">
       <button class="tab-btn active" data-tab="workoutTab">🏋️ הדמיית תרגילים, אימון וטיימר</button>
       <button class="tab-btn" data-tab="testTab">🎯 מבחן מעבר שלב + סימטריה</button>
-      <button class="tab-btn" data-tab="logTab">📓 היסטוריית ביצוע, סטטיסטיקה וגיבוי</button>
-      <button class="tab-btn" data-tab="placementTab">🧭 מבחן שיבוץ (עם הדמיה) וכללי רמזור</button>
+      <button class="tab-btn" data-tab="logTab">📓 היסטוריה, סטטיסטיקה וגיבוי</button>
+      <button class="tab-btn" data-tab="placementTab">🧭 מבחן שיבוץ וכללי רמזור</button>
     </nav>
 
     <!-- TAB 1: WORKOUTS + LIVE ANIMATIONS + TIMER -->
     <section id="workoutTab" class="tab-panel active">
       <div class="grid-2">
         <div>
-          <!-- User's 6 Classic Physio Exercises -->
           <div class="card">
             <div class="section-header-row">
               <div>
@@ -136,7 +157,6 @@
             <div id="baselinePhysioContainer"></div>
           </div>
 
-          <!-- Stage Progression Plan -->
           <div class="card">
             <div class="stage-banner">
               <h2 id="stageTitle">שלב 1</h2>
@@ -250,7 +270,7 @@
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-val" id="statPhysioCount">0</div>
-          <div class="stat-label">🧱 פעמיים פיזיותרפיה רגילה</div>
+          <div class="stat-label">🧱 פעמים פיזיותרפיה רגילה</div>
         </div>
         <div class="stat-card">
           <div class="stat-val" id="statSwimCount">0</div>
@@ -314,10 +334,10 @@
         <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between;">
           <button class="btn primary" id="addDetailedLogBtn">שמור רשומה ביומן</button>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <button class="btn small" id="copyMdLogsBtn">📋 העתק שורות Markdown</button>
-            <button class="btn small" id="exportJsonBtn">⬇️ ייצוא גיבוי JSON</button>
+            <button class="btn small" id="copyMdLogsBtn">📋 העתק Markdown</button>
+            <button class="btn small" id="exportJsonBtn">⬇️ ייצוא JSON</button>
             <label class="btn small" style="display:inline-flex; align-items:center;">
-              ⬆️ ייבוא גיבוי JSON
+              ⬆️ ייבוא JSON
               <input type="file" id="importJsonInput" accept="application/json" style="display:none;">
             </label>
             <button class="btn small danger-outline" id="clearLogsBtn">נקה יומן</button>
@@ -326,7 +346,7 @@
       </div>
 
       <div class="card">
-        <h3>📊 היסטוריית ביצוע מלאה (נשמר בדפדפן)</h3>
+        <h3>📊 היסטוריית ביצוע מלאה (נשמרת בדפדפן ומסתנכרנת בענן)</h3>
         <div style="overflow-x:auto;">
           <table>
             <thead>
@@ -370,11 +390,22 @@
       <div class="coach-topbar">
         <div class="control-group">
           <strong id="coachTitle">🎬 מצב מאמן מודרך</strong>
-          <span class="pill accent" id="coachStepBadge">תרגיל 1 מתוך 5</span>
+          <span class="pill accent" id="coachStepBadge">תרגיל 1 מתוך 6</span>
+          <span class="pill green" id="coachPhaseBadge">🏋️ זמן תרגיל</span>
         </div>
         <div class="control-group">
-          <select id="coachRoutineSelect" aria-label="בחר רוטינה למצב מאמן">
-            <option value="full">החלף אימון במצב מאמן...</option>
+          <label style="font-size:0.8rem; color:var(--text-muted); display:inline-flex; align-items:center; gap:5px;">
+            מנוחה:
+            <select id="coachRestSecSelect" aria-label="משך מנוחה אוטומטית" style="padding:4px 8px; font-size:0.82rem;">
+              <option value="15">15 שנ'</option>
+              <option value="20">20 שנ'</option>
+              <option value="25" selected>25 שנ'</option>
+              <option value="30">30 שנ'</option>
+              <option value="45">45 שנ'</option>
+            </select>
+          </label>
+          <select id="coachRoutineSelect" aria-label="בחר רוטינה למצב מאמן" style="padding:5px 8px; font-size:0.82rem;">
+            <option value="full">החלף אימון...</option>
             <option value="baseline">שישיית הבסיס שלי</option>
             <option value="dayA">תוספת יום א' (שלב נוכחי)</option>
             <option value="dayB">תוספת יום ב' (שלב נוכחי)</option>
@@ -388,7 +419,7 @@
       <div class="coach-grid">
         <div>
           <div class="coach-stage-canvas" id="coachCanvas"></div>
-          <div class="coach-controls" style="justify-content:center; margin-top:10px;">
+          <div class="coach-controls" style="justify-content:center; margin-top:8px;">
             <button class="btn small" id="coachPlayPauseAnimBtn">⏸️ עצור הדגמה</button>
             <button class="btn small" data-coach-speed="0.7">איטי 0.7x</button>
             <button class="btn small active" data-coach-speed="1">רגיל 1x</button>
@@ -401,19 +432,64 @@
           <div class="pill green" id="coachExerciseDose" style="align-self:flex-start;">3 × 12</div>
           <div class="coach-cue-box" id="coachCueText">דגש טכני</div>
 
-          <div style="text-align:center; background:var(--bg-deep); border:1px solid var(--border); border-radius:12px; padding:10px;">
+          <div class="coach-timer-box phase-exercise" id="coachTimerBox">
+            <div class="muted" id="coachTimerStatusLabel" style="font-weight:700;">⏱️ טיימר תרגיל — לחץ להפעלה (אחרי 00:00 מתחילה מנוחה אוטומטית)</div>
             <div class="coach-timer-big" id="coachTimerDisplay">00:40</div>
             <div class="coach-controls" style="justify-content:center;">
-              <button class="btn primary" id="coachStartTimerBtn">▶️ הפעל טיימר לסט</button>
+              <button class="btn primary" id="coachStartTimerBtn">▶️ הפעל טיימר</button>
             </div>
           </div>
 
-          <div class="coach-controls">
+          <div class="coach-primary-footer">
             <button class="btn" id="coachPrevBtn">◀️ הקודם</button>
-            <button class="btn success" style="flex:1;" id="coachDoneNextBtn">✓ ביצעתי — לתרגיל הבא</button>
-            <button class="btn small" id="coachSkipRestBtn">דלג מנוחה ⏭️</button>
+            <button class="btn success" style="flex:1;" id="coachDoneNextBtn">✓ סיימתי סט — התחל מנוחה</button>
           </div>
           <p class="muted" id="coachNextPreview" style="margin:4px 0 0;"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cloud Sync Modal (Phone <-> PC via Private GitHub Gist) -->
+  <div class="coach-modal" id="syncModal" role="dialog" aria-modal="true" aria-labelledby="syncModalTitle">
+    <div class="coach-dialog" style="max-width:620px;">
+      <div class="coach-topbar">
+        <strong id="syncModalTitle">☁️ סנכרון אוטומטי בין הטלפון למחשב</strong>
+        <button class="btn small danger-outline" id="syncCloseBtn">✕ סגור</button>
+      </div>
+      <p class="muted" style="margin-top:0;">
+        האימונים שלך מסתנכרנים אוטומטית דרך <strong>GitHub Secret Gist פרטי</strong> בחשבון שלך (חינמי, מוצפן ב-HTTPS, וללא שום שרת צד ג').
+      </p>
+      <div class="pill accent" id="syncModalStatusText" style="margin-bottom:12px;">☁️ סנכרון טלפון-מחשב</div>
+
+      <div class="core-box" style="margin-bottom:12px;">
+        <strong>הגדרה מהירה ב-30 שניות (פעם אחת במחשב):</strong>
+        <ol style="margin:6px 0 0; padding-right:18px;">
+          <li>לחץ <a href="https://github.com/settings/tokens/new?scopes=gist&description=AtlasPhysioSync" target="_blank" rel="noopener noreferrer" style="color:var(--accent); font-weight:700;">כאן ליצירת GitHub Token</a> (הרשאת <code>gist</code> בלבד כבר מסומנת).</li>
+          <li>הדבק את הטוקן למטה ולחץ <strong>חבר וסנכרן</strong>.</li>
+          <li>העתק את <strong>קישור הצימוד לסלולרי</strong> ושלח אותו לעצמך בוואטסאפ — פתיחתו בטלפון מחברת אוטומטית!</li>
+        </ol>
+      </div>
+
+      <label class="field" style="margin-bottom:10px;">GitHub Token (נשמר רק בדפדפן שלך — לעולם לא ב-Git)
+        <input type="password" id="syncTokenInput" placeholder="ghp_... או github_pat_...">
+      </label>
+      <label class="field" style="margin-bottom:12px;">מזהה Gist (אופציונלי — נוצר אוטומטית בחיבור ראשון)
+        <input type="text" id="syncGistIdInput" placeholder="יושלם אוטומטית">
+      </label>
+
+      <div class="control-group" style="margin-bottom:14px;">
+        <button class="btn primary" id="syncConnectBtn">🔗 חבר וסנכרן עכשיו</button>
+        <button class="btn" id="syncNowBtn">🔄 רענן סנכרון</button>
+        <button class="btn danger-outline" id="syncDisconnectBtn">נתק מכשיר</button>
+      </div>
+
+      <div id="syncPairingLinkBox" style="display:none; background:var(--bg-deep); border:1px solid var(--green); border-radius:10px; padding:12px;">
+        <strong style="color:#86efac;">📱 קישור צימוד בנגיעה אחת לטלפון שלך:</strong>
+        <p class="muted" style="margin:4px 0 8px;">שלח את הקישור הזה לעצמך (למשל בוואטסאפ). לחיצה עליו בטלפון תסנכרן מייד את כל ההיסטוריה והשלבים.</p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <input type="text" id="syncPairingUrlOutput" readonly style="flex:1; direction:ltr;">
+          <button class="btn success small" id="syncCopyPairBtn">📋 העתק קישור לטלפון</button>
         </div>
       </div>
     </div>
@@ -424,6 +500,7 @@
   <script src="./stages-data.js"></script>
   <script src="./animator.js"></script>
   <script src="./music-player.js"></script>
+  <script src="./cloud-sync.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>

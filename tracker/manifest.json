@@ -1,0 +1,21 @@
+{
+  "name": "אטלס-פיזיו — מאמן מודרך ומעקב אימונים",
+  "short_name": "אטלס-פיזיו",
+  "description": "אפליקציית פיזיותרפיה, קליסתניקס 10 שלבים ומוכנות למילואים עם הדמיה חיה וסנכרון בין מכשירים.",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#080d1a",
+  "theme_color": "#0b1224",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

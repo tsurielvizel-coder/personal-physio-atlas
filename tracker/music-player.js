@@ -1,10 +1,19 @@
 (function () {
   "use strict";
 
-  const PLAYLIST_STORAGE_KEY = "atlas_physio_music_prefs_v1";
+  const PLAYLIST_STORAGE_KEY = "atlas_physio_music_prefs_v2";
 
-  // Cheerful Hasidic / Niggun style offline sequences (MIDI notes + beats)
-  // Using authentic Jewish minor/Ahava Rabbah (Freygish) & lively Niggun intervals
+  // Verified embeddable YouTube IDs (confirmed via YouTube oEmbed)
+  const YOUTUBE_TRACKS = [
+    { id: "YlEAlLIfDRM", title: "מחרוזת ניגוני שמחה // מופע צמאה" },
+    { id: "E6GY-Ig4Zxs", title: "כנפי רוח (הרב קוק) • ביני לנדאו ומקהלת ישל\"צ" },
+    { id: "IMGsMZxoAdU", title: "צמאה • שולי רנד ומוטי שטיינמץ" },
+    { id: "SfxNQPhEnM8", title: "אברהם פריד • ניגון חסידי 'הצמח צדק' (צמאה)" },
+    { id: "aEAFmE0ZVqI", title: "מחרוזת ניגוני ריקוד • התוועדות ישיבות" },
+    { id: "bBy8LbLPogw", title: "רצף של שמחה עם ניגוני חב\"ד" }
+  ];
+
+  // Built-in cheerful Hasidic / Niggun Web Audio sequences (100% offline fallback)
   const NIGGUN_TRACKS = [
     {
       id: "niggun_simcha",
@@ -55,12 +64,12 @@
 
   const YOUTUBE_LINKS = [
     {
-      label: 'פרויקט "צמאה" (יוטיוב)',
+      label: 'ערוץ "צמאה" (יוטיוב)',
       url: "https://www.youtube.com/results?search_query=%D7%A6%D7%9E%D7%90%D7%94+%D7%A0%D7%99%D7%92%D7%95%D7%A0%D7%99+%D7%97%D7%91%22%D7%93"
     },
     {
-      label: "ניגוני הרב קוק / צמאה נפשי",
-      url: "https://www.youtube.com/results?search_query=%D7%A6%D7%9E%D7%90%D7%94+%D7%A0%D7%A4%D7%A9%D7%99+%D7%A0%D7%99%D7%92%D7%95%D7%A0%D7%99+%D7%94%D7%A8%D7%91+%D7%A7%D7%95%D7%A7"
+      label: "ניגוני הרב קוק / כנפי רוח",
+      url: "https://www.youtube.com/results?search_query=%D7%9B%D7%A0%D7%A4%D7%99+%D7%A8%D7%95%D7%97+%D7%94%D7%A8%D7%91+%D7%A7%D7%95%D7%A7"
     },
     {
       label: "מחרוזת חסידית קצבית",
@@ -68,21 +77,7 @@
     }
   ];
 
-  function midiToFreq(midi) {
-    return 440 * Math.pow(2, (midi - 69) / 12);
-  }
-
-  let audioCtx = null;
-  let masterGain = null;
-  let schedulerTimer = null;
-  let noteIndex = 0;
-  let nextNoteTime = 0;
-  let isPlayingSynth = false;
-
-  const htmlAudio = new Audio();
-  let localFiles = [];
-  let localIndex = 0;
-  let mode = "synth"; // "synth" or "local"
+  const isHttpOrigin = window.location.protocol === "http:" || window.location.protocol === "https:";
 
   function loadPrefs() {
     try {
@@ -94,18 +89,65 @@
   }
 
   const prefs = Object.assign({
-    trackId: NIGGUN_TRACKS[0].id,
-    volume: 0.45,
+    source: isHttpOrigin ? "youtube" : "synth",
+    ytTrackId: YOUTUBE_TRACKS[0].id,
+    synthTrackId: NIGGUN_TRACKS[0].id,
+    volume: 0.55,
     autoPlayCoach: true,
     customUrl: ""
   }, loadPrefs());
+
+  // On file:// YouTube embeds often block playback (Error 153), so force safe offline synth unless switched on http(s)
+  if (!isHttpOrigin && prefs.source === "youtube") {
+    prefs.source = "synth";
+  }
 
   function savePrefs() {
     try {
       localStorage.setItem(PLAYLIST_STORAGE_KEY, JSON.stringify(prefs));
     } catch (e) {
-      // ignore storage quota errors
+      // ignore quota
     }
+  }
+
+  function midiToFreq(midi) {
+    return 440 * Math.pow(2, (midi - 69) / 12);
+  }
+
+  // Web Audio Offline Synth state
+  let audioCtx = null;
+  let masterGain = null;
+  let schedulerTimer = null;
+  let noteIndex = 0;
+  let nextNoteTime = 0;
+  let isPlayingSynth = false;
+
+  // Local MP3 state
+  const htmlAudio = new Audio();
+  let localFiles = [];
+  let localIndex = 0;
+
+  // YouTube Embed state
+  let isPlayingYt = false;
+  let ytApiLoaded = false;
+  let ytPlayer = null;
+
+  function parseYouTubeUrl(url) {
+    if (!url) return null;
+    try {
+      const u = new URL(url);
+      const listId = u.searchParams.get("list");
+      const vId = u.searchParams.get("v");
+      if (listId) return { type: "playlist", id: listId };
+      if (vId) return { type: "video", id: vId };
+      if (u.hostname.includes("youtu.be")) {
+        const pathId = u.pathname.replace("/", "").trim();
+        if (pathId) return { type: "video", id: pathId };
+      }
+    } catch (e) {
+      return null;
+    }
+    return null;
   }
 
   function ensureAudioCtx() {
@@ -117,17 +159,13 @@
       masterGain.gain.value = prefs.volume * 0.4;
       masterGain.connect(audioCtx.destination);
     }
-    if (audioCtx.state === "suspended") {
-      audioCtx.resume();
-    }
+    if (audioCtx.state === "suspended") audioCtx.resume();
     return audioCtx;
   }
 
   function playSynthNote(midi, durSec, startTime) {
     if (!audioCtx || !masterGain) return;
     const freq = midiToFreq(midi);
-
-    // Warm clarinet/acoustic-plucked blend
     const osc = audioCtx.createOscillator();
     const oscSub = audioCtx.createOscillator();
     const filter = audioCtx.createBiquadFilter();
@@ -135,10 +173,8 @@
 
     osc.type = "triangle";
     osc.frequency.setValueAtTime(freq, startTime);
-
     oscSub.type = "sine";
     oscSub.frequency.setValueAtTime(freq * 0.5, startTime);
-
     filter.type = "lowpass";
     filter.frequency.setValueAtTime(1650, startTime);
 
@@ -157,7 +193,6 @@
     osc.stop(startTime + durSec);
     oscSub.stop(startTime + durSec);
 
-    // Soft rhythmic acoustic pulse on strong beats
     if (noteIndex % 2 === 0) {
       const bassOsc = audioCtx.createOscillator();
       const bassEnv = audioCtx.createGain();
@@ -175,7 +210,7 @@
 
   function scheduleSynth() {
     if (!isPlayingSynth || !audioCtx) return;
-    const track = NIGGUN_TRACKS.find((t) => t.id === prefs.trackId) || NIGGUN_TRACKS[0];
+    const track = NIGGUN_TRACKS.find((t) => t.id === prefs.synthTrackId) || NIGGUN_TRACKS[0];
     const secPerBeat = 60 / track.bpm;
     while (nextNoteTime < audioCtx.currentTime + 0.25) {
       const [midi, beats] = track.notes[noteIndex % track.notes.length];
@@ -191,7 +226,6 @@
     stopAllAudio();
     const ctx = ensureAudioCtx();
     if (!ctx) return;
-    mode = "synth";
     isPlayingSynth = true;
     noteIndex = 0;
     nextNoteTime = ctx.currentTime + 0.04;
@@ -202,12 +236,71 @@
   function startLocalAt(idx) {
     if (!localFiles.length) return;
     stopAllAudio();
-    mode = "local";
     localIndex = ((idx % localFiles.length) + localFiles.length) % localFiles.length;
     htmlAudio.src = localFiles[localIndex].url;
     htmlAudio.volume = prefs.volume;
     htmlAudio.play().catch(() => {});
     updateUI();
+  }
+
+  function buildYouTubeEmbedUrl() {
+    const customParsed = prefs.ytTrackId === "custom" ? parseYouTubeUrl(prefs.customUrl) : null;
+    if (customParsed && customParsed.type === "playlist") {
+      return `https://www.youtube.com/embed/videoseries?list=${encodeURIComponent(customParsed.id)}&autoplay=1&enablejsapi=1&rel=0`;
+    }
+    if (customParsed && customParsed.type === "video") {
+      return `https://www.youtube.com/embed/${encodeURIComponent(customParsed.id)}?autoplay=1&loop=1&playlist=${encodeURIComponent(customParsed.id)}&enablejsapi=1&rel=0`;
+    }
+    const startId = YOUTUBE_TRACKS.some((t) => t.id === prefs.ytTrackId) ? prefs.ytTrackId : YOUTUBE_TRACKS[0].id;
+    const restIds = YOUTUBE_TRACKS.map((t) => t.id).filter((id) => id !== startId);
+    const playlistCsv = [startId].concat(restIds).join(",");
+    return `https://www.youtube.com/embed/${encodeURIComponent(startId)}?autoplay=1&loop=1&playlist=${encodeURIComponent(playlistCsv)}&enablejsapi=1&rel=0`;
+  }
+
+  function startYouTube() {
+    if (!isHttpOrigin) {
+      // Fallback safely on file://
+      prefs.source = "synth";
+      populateTracks();
+      startSynth();
+      return;
+    }
+    stopAllAudio();
+    isPlayingYt = true;
+    const wrap = document.getElementById("ytPlayerWrap");
+    const host = document.getElementById("ytIframeHost");
+    if (wrap && host) {
+      wrap.classList.add("open");
+      const iframe = document.createElement("iframe");
+      iframe.id = "ytEmbeddedIframe";
+      iframe.src = buildYouTubeEmbedUrl();
+      iframe.allow = "autoplay; encrypted-media; picture-in-picture";
+      iframe.allowFullscreen = true;
+      iframe.title = "נגן מוזיקה צמאה והרב קוק";
+      host.innerHTML = "";
+      host.appendChild(iframe);
+
+      // Load YouTube IFrame API asynchronously for live volume control when hosted
+      if (!ytApiLoaded && window.YT && window.YT.Player) {
+        try {
+          ytPlayer = new window.YT.Player("ytEmbeddedIframe", {
+            events: {
+              onReady: (ev) => ev.target.setVolume(Math.round(prefs.volume * 100))
+            }
+          });
+        } catch (e) { /* ignore */ }
+      }
+    }
+    updateUI();
+  }
+
+  function stopYouTube() {
+    isPlayingYt = false;
+    const wrap = document.getElementById("ytPlayerWrap");
+    const host = document.getElementById("ytIframeHost");
+    if (wrap) wrap.classList.remove("open");
+    if (host) host.innerHTML = "";
+    ytPlayer = null;
   }
 
   function stopAllAudio() {
@@ -216,21 +309,64 @@
       clearTimeout(schedulerTimer);
       schedulerTimer = null;
     }
-    if (!htmlAudio.paused) {
-      htmlAudio.pause();
-    }
+    if (!htmlAudio.paused) htmlAudio.pause();
+    stopYouTube();
     updateUI();
   }
 
   function isCurrentlyPlaying() {
-    return isPlayingSynth || (mode === "local" && !htmlAudio.paused);
+    return isPlayingYt || isPlayingSynth || (prefs.source === "local" && !htmlAudio.paused);
   }
 
   htmlAudio.addEventListener("ended", () => {
-    if (localFiles.length > 0) {
-      startLocalAt(localIndex + 1);
-    }
+    if (localFiles.length > 0) startLocalAt(localIndex + 1);
   });
+
+  function populateTracks() {
+    const select = document.getElementById("musicTrackSelect");
+    if (!select) return;
+    select.innerHTML = "";
+
+    if (prefs.source === "youtube") {
+      YOUTUBE_TRACKS.forEach((tr) => {
+        const opt = document.createElement("option");
+        opt.value = tr.id;
+        opt.textContent = "📺 " + tr.title;
+        select.appendChild(opt);
+      });
+      if (parseYouTubeUrl(prefs.customUrl)) {
+        const opt = document.createElement("option");
+        opt.value = "custom";
+        opt.textContent = "⭐ הפלייליסט האישי שלי מיוטיוב";
+        select.appendChild(opt);
+      }
+      select.value = prefs.ytTrackId;
+      if (!select.value) select.value = YOUTUBE_TRACKS[0].id;
+    } else if (prefs.source === "synth") {
+      NIGGUN_TRACKS.forEach((tr) => {
+        const opt = document.createElement("option");
+        opt.value = tr.id;
+        opt.textContent = "🎶 " + tr.title;
+        select.appendChild(opt);
+      });
+      select.value = prefs.synthTrackId;
+    } else {
+      if (!localFiles.length) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "📁 טען קבצי MP3 בתפריט";
+        select.appendChild(opt);
+      } else {
+        localFiles.forEach((f, idx) => {
+          const opt = document.createElement("option");
+          opt.value = String(idx);
+          opt.textContent = "🎵 " + f.name;
+          select.appendChild(opt);
+        });
+        select.value = String(localIndex);
+      }
+    }
+  }
 
   function updateUI() {
     const playBtn = document.getElementById("musicPlayPauseBtn");
@@ -238,35 +374,66 @@
     if (!playBtn || !statusLabel) return;
 
     const playing = isCurrentlyPlaying();
-    playBtn.textContent = playing ? "⏸️ עצור מוזיקה" : "▶️ נגן ניגון";
+    playBtn.textContent = playing ? "⏸️ עצור מוזיקה" : "▶️ נגן מוזיקה";
     playBtn.classList.toggle("active", playing);
 
-    if (mode === "local" && localFiles.length) {
-      const f = localFiles[localIndex];
-      statusLabel.textContent = (playing ? "🎵 מנגן MP3: " : "MP3 מוכן: ") + f.name;
+    if (prefs.source === "youtube") {
+      const tr = YOUTUBE_TRACKS.find((t) => t.id === prefs.ytTrackId);
+      const label = prefs.ytTrackId === "custom" ? "פלייליסט יוטיוב אישי" : (tr ? tr.title : "צמאה / הרב קוק");
+      statusLabel.textContent = (playing ? "📺 מתנגן: " : "יוטיוב מוכן: ") + label;
+    } else if (prefs.source === "local" && localFiles.length) {
+      statusLabel.textContent = (playing ? "🎵 MP3: " : "MP3 מוכן: ") + localFiles[localIndex].name;
     } else {
-      const tr = NIGGUN_TRACKS.find((t) => t.id === prefs.trackId) || NIGGUN_TRACKS[0];
-      statusLabel.textContent = (playing ? "🎶 מנגן: " : "ניגון נבחר: ") + tr.title;
+      const tr = NIGGUN_TRACKS.find((t) => t.id === prefs.synthTrackId) || NIGGUN_TRACKS[0];
+      statusLabel.textContent = (playing ? "🎶 מנגן: " : "ניגון מוכן: ") + tr.title;
     }
   }
 
   function init() {
-    const select = document.getElementById("musicTrackSelect");
-    if (select) {
-      select.innerHTML = "";
-      NIGGUN_TRACKS.forEach((tr) => {
-        const opt = document.createElement("option");
-        opt.value = tr.id;
-        opt.textContent = tr.title;
-        select.appendChild(opt);
-      });
-      select.value = prefs.trackId;
-      select.addEventListener("change", (e) => {
-        prefs.trackId = e.target.value;
+    const srcSelect = document.getElementById("musicSourceSelect");
+    if (srcSelect) {
+      if (!isHttpOrigin) {
+        const ytOpt = srcSelect.querySelector('option[value="youtube"]');
+        if (ytOpt) ytOpt.textContent = "📺 יוטיוב (פעיל באתר האונליין / GitHub)";
+      }
+      srcSelect.value = prefs.source;
+      srcSelect.addEventListener("change", (e) => {
+        const nextSrc = e.target.value;
+        if (nextSrc === "youtube" && !isHttpOrigin) {
+          prefs.source = "synth";
+          srcSelect.value = "synth";
+        } else {
+          prefs.source = nextSrc;
+        }
         savePrefs();
-        mode = "synth";
-        if (isCurrentlyPlaying()) startSynth();
-        else updateUI();
+        populateTracks();
+        if (isCurrentlyPlaying()) {
+          if (prefs.source === "youtube") startYouTube();
+          else if (prefs.source === "local" && localFiles.length) startLocalAt(localIndex);
+          else startSynth();
+        } else {
+          updateUI();
+        }
+      });
+    }
+
+    const trackSelect = document.getElementById("musicTrackSelect");
+    if (trackSelect) {
+      populateTracks();
+      trackSelect.addEventListener("change", (e) => {
+        if (prefs.source === "youtube") prefs.ytTrackId = e.target.value;
+        else if (prefs.source === "synth") prefs.synthTrackId = e.target.value;
+        else if (prefs.source === "local" && localFiles.length) {
+          localIndex = Number(e.target.value) || 0;
+        }
+        savePrefs();
+        if (isCurrentlyPlaying()) {
+          if (prefs.source === "youtube") startYouTube();
+          else if (prefs.source === "local" && localFiles.length) startLocalAt(localIndex);
+          else startSynth();
+        } else {
+          updateUI();
+        }
       });
     }
 
@@ -279,6 +446,9 @@
           masterGain.gain.setValueAtTime(prefs.volume * 0.4, audioCtx.currentTime);
         }
         htmlAudio.volume = prefs.volume;
+        if (ytPlayer && typeof ytPlayer.setVolume === "function") {
+          ytPlayer.setVolume(Math.round(prefs.volume * 100));
+        }
         savePrefs();
       });
     }
@@ -288,7 +458,9 @@
       playBtn.addEventListener("click", () => {
         if (isCurrentlyPlaying()) {
           stopAllAudio();
-        } else if (mode === "local" && localFiles.length) {
+        } else if (prefs.source === "youtube" && isHttpOrigin) {
+          startYouTube();
+        } else if (prefs.source === "local" && localFiles.length) {
           startLocalAt(localIndex);
         } else {
           startSynth();
@@ -296,12 +468,15 @@
       });
     }
 
+    const hideYtBtn = document.getElementById("ytHideMiniBtn");
+    if (hideYtBtn) {
+      hideYtBtn.addEventListener("click", stopAllAudio);
+    }
+
     const moreBtn = document.getElementById("musicMoreBtn");
     const drawer = document.getElementById("musicDrawer");
     if (moreBtn && drawer) {
-      moreBtn.addEventListener("click", () => {
-        drawer.classList.toggle("open");
-      });
+      moreBtn.addEventListener("click", () => drawer.classList.toggle("open"));
     }
 
     const mp3Input = document.getElementById("localMp3Input");
@@ -311,6 +486,9 @@
         if (!files.length) return;
         localFiles.forEach((f) => URL.revokeObjectURL(f.url));
         localFiles = files.map((file) => ({ name: file.name, url: URL.createObjectURL(file) }));
+        prefs.source = "local";
+        if (srcSelect) srcSelect.value = "local";
+        populateTracks();
         startLocalAt(0);
       });
     }
@@ -335,12 +513,26 @@
     }
 
     const customInput = document.getElementById("customPlaylistUrlInput");
+    const applyCustomBtn = document.getElementById("applyCustomYtBtn");
     const customOpenBtn = document.getElementById("openCustomPlaylistBtn");
     if (customInput) {
       customInput.value = prefs.customUrl || "";
       customInput.addEventListener("change", (e) => {
         prefs.customUrl = e.target.value.trim();
         savePrefs();
+      });
+    }
+    if (applyCustomBtn) {
+      applyCustomBtn.addEventListener("click", () => {
+        const url = (customInput ? customInput.value.trim() : "") || prefs.customUrl;
+        if (!parseYouTubeUrl(url)) return;
+        prefs.customUrl = url;
+        prefs.source = isHttpOrigin ? "youtube" : prefs.source;
+        prefs.ytTrackId = "custom";
+        savePrefs();
+        if (srcSelect) srcSelect.value = prefs.source;
+        populateTracks();
+        if (isHttpOrigin) startYouTube();
       });
     }
     if (customOpenBtn) {
@@ -369,7 +561,8 @@
     init,
     playIfAutoEnabled() {
       if (!prefs.autoPlayCoach || isCurrentlyPlaying()) return;
-      if (mode === "local" && localFiles.length) startLocalAt(localIndex);
+      if (prefs.source === "youtube" && isHttpOrigin) startYouTube();
+      else if (prefs.source === "local" && localFiles.length) startLocalAt(localIndex);
       else startSynth();
     },
     stop: stopAllAudio

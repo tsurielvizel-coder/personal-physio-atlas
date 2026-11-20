@@ -9,6 +9,7 @@
 
   const Animator = window.AtlasAnimator;
   const Music = window.AtlasMusic;
+  const Sync = window.AtlasSync;
 
   const STORAGE_KEY = "atlas_physio_state_v2";
   const LEGACY_KEY = "atlas_physio_state_v1";
@@ -17,12 +18,18 @@
     return new Date().toISOString().slice(0, 10);
   }
 
+  function makeEntryId() {
+    return Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7);
+  }
+
   const defaultState = {
     currentStageId: 1,
     mode: "mode30",
     snackIndex: 0,
+    restSec: 25,
+    updatedAt: 0,
     testChecks: {},
-    doneByDate: {}, // { "YYYY-MM-DD": { exerciseKey: true } }
+    doneByDate: {},
     logs: []
   };
 
@@ -38,11 +45,15 @@
   }
 
   let state = loadState();
-  function saveState() {
+  function saveState(skipSyncPush) {
+    state.updatedAt = Date.now();
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch (e) {
       // ignore storage quota errors
+    }
+    if (!skipSyncPush && Sync) {
+      Sync.schedulePush();
     }
   }
 
@@ -142,7 +153,7 @@
     if (recent >= 3) {
       streakEl.textContent = "🔥 שבוע חזק! " + recent + " פעילויות ב-7 ימים";
     } else if (recent >= 1) {
-      streakEl.textContent = "💪 " + recent + " השבוע (כלל: לא מפספסים פעמיים)";
+      streakEl.textContent = "💪 " + recent + " השבוע (לא מפספסים פעמיים)";
     } else {
       streakEl.textContent = "⚡ סמן אימון בקליק או פתח מצב מאמן";
     }
@@ -187,9 +198,7 @@
       renderHeader();
       renderBaselinePhysio();
       renderWorkouts();
-      if (isDoneToday(uniqueKey)) {
-        showToast("✓ סומן בוצע: " + ex.name);
-      }
+      if (isDoneToday(uniqueKey)) showToast("✓ סומן בוצע: " + ex.name);
     });
 
     const zoomBtn = document.createElement("button");
@@ -205,9 +214,7 @@
     card.appendChild(thumb);
     card.appendChild(body);
 
-    if (Animator) {
-      Animator.mount(thumb, ex.anim || "plank", { compact: true });
-    }
+    if (Animator) Animator.mount(thumb, ex.anim || "plank", { compact: true });
     return card;
   }
 
@@ -365,9 +372,7 @@
     document.getElementById("snackBenefit").textContent = "למה זה עובד: " + sn.benefit;
 
     const preview = document.getElementById("snackAnimPreview");
-    if (preview && Animator) {
-      Animator.mount(preview, sn.anim || "hip_flexor", { compact: false });
-    }
+    if (preview && Animator) Animator.mount(preview, sn.anim || "hip_flexor", { compact: false });
   }
 
   function renderPlacementAndTraffic() {
@@ -489,7 +494,7 @@
     tbody.innerHTML = "";
     if (!state.logs.length) {
       const tr = document.createElement("tr");
-      tr.innerHTML = "<td colspan='9' class='muted' style='text-align:center; padding:18px;'>עדיין אין פעילות מתועדת. לחץ למעלה על 'ביצעתי פיזיותרפיה רגילה' או 'ביצעתי שחייה' בקליק אחד!</td>";
+      tr.innerHTML = "<td colspan='9' class='muted' style='text-align:center; padding:18px;'>עדיין אין פעילות מתועדת. לחץ למעלה על 'ביצעתי פיזיו רגיל' או 'ביצעתי שחייה' בקליק אחד!</td>";
       tbody.appendChild(tr);
       return;
     }
@@ -529,6 +534,7 @@
     const baseList = DATA.baselinePhysio || [];
     baseList.forEach((ex) => toggleDoneToday("base:" + ex.id, true));
     state.logs.push({
+      id: makeEntryId(),
       date: todayISO(),
       stage: state.currentStageId,
       mode: "פיזיו רגיל",
@@ -547,6 +553,7 @@
 
   function logSwimming() {
     state.logs.push({
+      id: makeEntryId(),
       date: todayISO(),
       stage: state.currentStageId,
       mode: "שחייה 30 דק'",
@@ -567,6 +574,7 @@
     const em = DATA.emergencyMode;
     em.exercises.forEach((ex, idx) => toggleDoneToday("em:" + idx + ":" + ex.name, true));
     state.logs.push({
+      id: makeEntryId(),
       date: todayISO(),
       stage: state.currentStageId,
       mode: "חירום 5 דק'",
@@ -610,6 +618,7 @@
     }
     const names = keys.map(resolveKeyToExerciseName);
     state.logs.push({
+      id: makeEntryId(),
       date: todayISO(),
       stage: state.currentStageId,
       mode: state.mode === "mode60" ? "+60 דק'" : state.mode === "mode5" ? "חירום 5 דק'" : "+30 דק'",
@@ -662,55 +671,165 @@
     }, 1000);
   }
 
-  // Guided Follow-Along Coach Mode ("גל מאמן כושר" Style)
+  // Guided Follow-Along Coach Mode with 3-Phase State Machine:
+  // "exercise" -> (auto starts) "rest" -> (stops & waits for manual click) "ready_next"
   let coachQueue = [];
   let coachIndex = 0;
   let coachTitleLabel = "";
   let coachTimerSec = 0;
   let coachTimerHandle = null;
-  let coachInRest = false;
+  let coachPhase = "exercise"; // "exercise" | "rest" | "ready_next"
 
   function stopCoachTimer() {
     if (coachTimerHandle) {
       clearInterval(coachTimerHandle);
       coachTimerHandle = null;
     }
-    const btn = document.getElementById("coachStartTimerBtn");
-    if (btn) btn.textContent = "▶️ הפעל טיימר לסט";
   }
 
-  function startCoachTimer(sec) {
+  function updateCoachPhaseUI() {
+    const ex = coachQueue[coachIndex];
+    const nextEx = coachQueue[coachIndex + 1];
+    const isLast = coachIndex >= coachQueue.length - 1;
+
+    const phaseBadge = document.getElementById("coachPhaseBadge");
+    const timerBox = document.getElementById("coachTimerBox");
+    const statusLabel = document.getElementById("coachTimerStatusLabel");
+    const startBtn = document.getElementById("coachStartTimerBtn");
+    const doneBtn = document.getElementById("coachDoneNextBtn");
+
+    timerBox.className = "coach-timer-box phase-" + coachPhase;
+
+    if (coachPhase === "exercise") {
+      phaseBadge.className = "pill green";
+      phaseBadge.textContent = "🏋️ זמן תרגיל";
+      statusLabel.textContent = coachTimerHandle
+        ? "⏱️ עובדים! כשיסתיים הטיימר תתחיל מנוחה אוטומטית"
+        : "⏱️ טיימר תרגיל — לחץ להפעלה (אחרי 00:00 מתחילה מנוחה אוטומטית)";
+      startBtn.style.display = "inline-flex";
+      startBtn.textContent = coachTimerHandle ? "⏸️ השהה טיימר" : "▶️ הפעל טיימר";
+      doneBtn.className = "btn success";
+      doneBtn.textContent = isLast ? "🏁 סיימתי את כל האימון — שמור ביומן!" : "✓ סיימתי סט — התחל מנוחה";
+    } else if (coachPhase === "rest") {
+      phaseBadge.className = "pill yellow";
+      phaseBadge.textContent = "😮‍💨 מנוחה אוטומטית";
+      statusLabel.textContent = "😮‍💨 מנוחה אוטומטית בין תרגילים — בסיומה ממתינים ללחיצה שלך!";
+      startBtn.style.display = "inline-flex";
+      startBtn.textContent = coachTimerHandle ? "⏸️ השהה מנוחה" : "▶️ המשך מנוחה";
+      doneBtn.className = "btn warning";
+      doneBtn.textContent = nextEx ? ("⏭️ דלג מנוחה ועבור אל: " + nextEx.name) : "⏭️ המשך";
+    } else {
+      // "ready_next" — never auto-advances! Waits explicitly for user click
+      phaseBadge.className = "pill accent";
+      phaseBadge.textContent = "✅ מוכן לתרגיל הבא";
+      statusLabel.textContent = "✅ המנוחה הסתיימה! לחץ למטה כשתרצה להתחיל את התרגיל הבא";
+      startBtn.style.display = "none";
+      doneBtn.className = "btn success";
+      doneBtn.textContent = nextEx ? ("➡️ עבור לתרגיל הבא: " + nextEx.name) : "➡️ לתרגיל הבא";
+    }
+  }
+
+  function finishWorkoutAndSave() {
+    const names = coachQueue.map((item) => item.name);
+    state.logs.push({
+      id: makeEntryId(),
+      date: todayISO(),
+      stage: state.currentStageId,
+      mode: state.mode === "mode60" ? "+60 דק'" : state.mode === "mode5" ? "חירום 5 דק'" : "+30 דק'",
+      session: "מאמן מודרך (" + coachTitleLabel + ")",
+      pain: 1,
+      nextDay: "ירוק",
+      energy: 5,
+      exercises: names,
+      notes: "סיום אימון מודרך עם הדמיה חיה"
+    });
+    saveState();
+    renderAll();
+    closeCoachModal();
+    playBeep(3);
+    showToast("🎉 כל האימון המודרך הסתיים ונשמר בהיסטוריה!");
+  }
+
+  function startAutomaticRest() {
+    const ex = coachQueue[coachIndex];
+    if (ex && ex._key) toggleDoneToday(ex._key, true);
+    renderHeader();
+    renderBaselinePhysio();
+    renderWorkouts();
+
+    if (coachIndex >= coachQueue.length - 1) {
+      finishWorkoutAndSave();
+      return;
+    }
+
     stopCoachTimer();
-    coachTimerSec = Math.max(5, Number(sec) || 35);
+    coachPhase = "rest";
+    coachTimerSec = Number(state.restSec) || 25;
     document.getElementById("coachTimerDisplay").textContent = formatTime(coachTimerSec);
-    document.getElementById("coachStartTimerBtn").textContent = "⏸️ השהה טיימר";
+    updateCoachPhaseUI();
+    showToast("😮‍💨 התרגיל הושלם! מנוחה אוטומטית של " + coachTimerSec + " שנ'");
+
     coachTimerHandle = setInterval(() => {
       coachTimerSec -= 1;
       document.getElementById("coachTimerDisplay").textContent = formatTime(Math.max(0, coachTimerSec));
-      if (coachTimerSec <= 3 && coachTimerSec > 0) {
-        playBeep(1);
-      }
       if (coachTimerSec <= 0) {
         stopCoachTimer();
         playBeep(2);
-        if (coachInRest) {
-          coachInRest = false;
-          if (coachIndex < coachQueue.length - 1) {
-            coachIndex++;
-            renderCoachStep();
-          }
-        } else {
-          showToast("⏱️ זמן התרגיל הסתיים! לחץ 'ביצעתי והמשך'!");
-        }
+        // Rest finished: pause and wait for explicit user click!
+        coachPhase = "ready_next";
+        updateCoachPhaseUI();
+        showToast("✅ המנוחה הסתיימה — לחץ כשתהיה מוכן לתרגיל הבא!");
       }
     }, 1000);
+    updateCoachPhaseUI();
+  }
+
+  function startExerciseTimer() {
+    if (coachPhase === "rest") {
+      if (coachTimerHandle) {
+        stopCoachTimer();
+        updateCoachPhaseUI();
+        return;
+      }
+      // Resume paused rest
+      coachTimerHandle = setInterval(() => {
+        coachTimerSec -= 1;
+        document.getElementById("coachTimerDisplay").textContent = formatTime(Math.max(0, coachTimerSec));
+        if (coachTimerSec <= 0) {
+          stopCoachTimer();
+          playBeep(2);
+          coachPhase = "ready_next";
+          updateCoachPhaseUI();
+        }
+      }, 1000);
+      updateCoachPhaseUI();
+      return;
+    }
+
+    if (coachTimerHandle) {
+      stopCoachTimer();
+      updateCoachPhaseUI();
+      return;
+    }
+
+    coachTimerHandle = setInterval(() => {
+      coachTimerSec -= 1;
+      document.getElementById("coachTimerDisplay").textContent = formatTime(Math.max(0, coachTimerSec));
+      if (coachTimerSec <= 3 && coachTimerSec > 0) playBeep(1);
+      if (coachTimerSec <= 0) {
+        stopCoachTimer();
+        playBeep(2);
+        startAutomaticRest();
+      }
+    }, 1000);
+    updateCoachPhaseUI();
   }
 
   function renderCoachStep() {
     const ex = coachQueue[coachIndex];
     if (!ex) return;
     stopCoachTimer();
-    coachInRest = false;
+    coachPhase = "exercise";
 
     document.getElementById("coachTitle").textContent = "🎬 מצב מאמן מודרך — " + coachTitleLabel;
     document.getElementById("coachStepBadge").textContent = "תרגיל " + (coachIndex + 1) + " מתוך " + coachQueue.length;
@@ -723,7 +842,7 @@
     const nextEx = coachQueue[coachIndex + 1];
     document.getElementById("coachNextPreview").textContent = nextEx
       ? "התרגיל הבא בתור: " + nextEx.name + " (" + nextEx.setsReps + ")"
-      : "זהו התרגיל האחרון בסשן — בסיום נרשום הכול ביומן!";
+      : "זהו התרגיל האחרון בסשן — בסיום האימון נשמר אוטומטית ביומן!";
 
     const canvas = document.getElementById("coachCanvas");
     if (Animator) {
@@ -732,6 +851,7 @@
     }
     const animPauseBtn = document.getElementById("coachPlayPauseAnimBtn");
     if (animPauseBtn) animPauseBtn.textContent = "⏸️ עצור הדגמה";
+    updateCoachPhaseUI();
   }
 
   function openCoachWithQueue(queue, label) {
@@ -739,6 +859,7 @@
     coachQueue = queue;
     coachIndex = 0;
     coachTitleLabel = label;
+    document.getElementById("coachRestSecSelect").value = String(state.restSec || 25);
     document.getElementById("coachModal").classList.add("open");
     renderCoachStep();
     if (Music) Music.playIfAutoEnabled();
@@ -764,7 +885,6 @@
       openCoachWithQueue(dayQueue, day.title);
       return;
     }
-    // Full combined session (Base + Day A)
     const dayA = st.workouts.dayA;
     const dayAQueue = (dayA[modeKey] || []).map((e, i) => Object.assign({ _key: "st" + st.id + ":dayA:" + modeKey + ":" + i }, e));
     openCoachWithQueue(baseQueue.concat(dayAQueue), "בסיס + " + dayA.title);
@@ -787,14 +907,12 @@
   document.getElementById("saveTodayCheckedBtn").addEventListener("click", saveTodayCheckedToLog);
 
   document.getElementById("coachCloseBtn").addEventListener("click", closeCoachModal);
-  document.getElementById("coachRoutineSelect").addEventListener("change", (e) => {
-    launchCoachPreset(e.target.value);
+  document.getElementById("coachRoutineSelect").addEventListener("change", (e) => launchCoachPreset(e.target.value));
+  document.getElementById("coachRestSecSelect").addEventListener("change", (e) => {
+    state.restSec = Number(e.target.value) || 25;
+    saveState();
   });
-
-  document.getElementById("coachStartTimerBtn").addEventListener("click", () => {
-    if (coachTimerHandle) stopCoachTimer();
-    else startCoachTimer(coachTimerSec);
-  });
+  document.getElementById("coachStartTimerBtn").addEventListener("click", startExerciseTimer);
 
   document.getElementById("coachPlayPauseAnimBtn").addEventListener("click", (e) => {
     if (!Animator) return;
@@ -819,42 +937,16 @@
   });
 
   document.getElementById("coachDoneNextBtn").addEventListener("click", () => {
-    const ex = coachQueue[coachIndex];
-    if (ex && ex._key) toggleDoneToday(ex._key, true);
-    renderHeader();
-    renderBaselinePhysio();
-    renderWorkouts();
-
-    if (coachIndex < coachQueue.length - 1) {
-      coachInRest = true;
-      showToast("✓ תרגיל הושלם! מנוחה קצרה 20 שנ' או לחץ דלג");
-      startCoachTimer(20);
+    if (coachPhase === "exercise") {
+      startAutomaticRest();
     } else {
-      // Finished queue: save session log automatically!
-      const names = coachQueue.map((item) => item.name);
-      state.logs.push({
-        date: todayISO(),
-        stage: state.currentStageId,
-        mode: state.mode === "mode60" ? "+60 דק'" : state.mode === "mode5" ? "חירום 5 דק'" : "+30 דק'",
-        session: "מאמן מודרך (" + coachTitleLabel + ")",
-        pain: 1,
-        nextDay: "ירוק",
-        energy: 5,
-        exercises: names,
-        notes: "סיום אימון מודרך עם הדמיה חיה"
-      });
-      saveState();
-      renderAll();
-      closeCoachModal();
-      playBeep(3);
-      showToast("🎉 כל האימון המודרך הסתיים ונשמר בהיסטוריה!");
-    }
-  });
-
-  document.getElementById("coachSkipRestBtn").addEventListener("click", () => {
-    if (coachIndex < coachQueue.length - 1) {
-      coachIndex++;
-      renderCoachStep();
+      // Currently in "rest" or "ready_next": explicit click advances to next exercise
+      if (coachIndex < coachQueue.length - 1) {
+        coachIndex++;
+        renderCoachStep();
+      } else {
+        finishWorkoutAndSave();
+      }
     }
   });
 
@@ -948,6 +1040,7 @@
       return;
     }
     state.logs.push({
+      id: makeEntryId(),
       date: todayISO(),
       stage: st.id,
       mode: state.mode === "mode60" ? "+60 דק'" : state.mode === "mode5" ? "חירום 5 דק'" : "+30 דק'",
@@ -977,6 +1070,7 @@
   document.getElementById("addDetailedLogBtn").addEventListener("click", () => {
     const note = document.getElementById("logNotesInput").value.trim();
     state.logs.push({
+      id: makeEntryId(),
       date: document.getElementById("logDateInput").value || todayISO(),
       stage: Number(document.getElementById("logStageInput").value) || state.currentStageId,
       mode: document.getElementById("logModeSelect").value,
@@ -1054,4 +1148,16 @@
   if (Music) Music.init();
   renderAll();
   updateTimerUI();
+
+  if (Sync) {
+    Sync.init({
+      getState: () => state,
+      applyMergedState: (merged) => {
+        state = Object.assign({}, defaultState, merged);
+        saveState(true);
+        renderAll();
+      },
+      showToast
+    });
+  }
 })();

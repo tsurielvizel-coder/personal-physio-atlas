@@ -65,12 +65,15 @@
 
 ---
 
-## העלאה ל-GitHub ופתיחת אפליקציית המעקב ב-GitHub Pages
+## העלאה לאוויר (GitHub Pages לסלולרי ולמחשב) + סנכרון ענן
 
+המאגר מוכן להרצה כ-**אפליקציית מובייל (PWA)** עם:
+- דף פתיחה אוטומטי ב-[index.html](index.html) וקובצי PWA ב-[tracker/manifest.json](tracker/manifest.json)
+- נגן **יוטיוב משולב ואוטומטי** של ניגוני **צמאה**, **הרב קוק (כנפי רוח)** ומחרוזות חסידיות
+- **סנכרון אוטומטי בין הטלפון למחשב** דרך GitHub Secret Gist ([tracker/cloud-sync.js](tracker/cloud-sync.js)) עם קישור צימוד בנגיעה אחת
+
+להעלאה והפעלת GitHub Pages אוטומטית (בערך 30 שניות), הרץ מתיקיית הפרויקט:
 ```powershell
-# 1. התחברות לחשבון GitHub (פעם אחת)
-gh auth login
-
-# 2. יצירת מאגר פרטי (או ציבורי) ודחיפת הקוד
-gh repo create personal-physio-atlas --private --source=. --remote=origin --push
+.\deploy-github.ps1
 ```
+לאחר מכן פתח את הכתובת שתוצג (`https://tsurielvizel.github.io/personal-physio-atlas/tracker/`) במחשב, לחץ באפליקציה על **☁️ סנכרון טלפון-מחשב**, חבר GitHub Token עם הרשאת `gist` בלבד, ושלח את **קישור הצימוד** לטלפון שלך בוואטסאפ!
