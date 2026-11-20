@@ -1,5 +1,5 @@
 # פרופיל מתאמן - מאגר פיזיותרפיה, קליסתניקס ומוכנות למילואים
-version: "2.0.0"
+version: "2.1.0"
 updated_at: "2026-11-20"
 
 trainee:
@@ -25,7 +25,7 @@ clinical_context:
     - "Lengthening tight hip flexors from prolonged sitting"
     - "Gentle mini-cobra thoracic lengthening without over-crushing lumbar segments"
     - "Preserve user's preferred Lying Leg Raises (hands under glutes) with posterior-pelvic lock cue"
-    - "Anti-lateral flexion & anti-rotation endurance (Side Plank + Suitcase Carry) for Miluim & future carry resilience"
+    - "Anti-lateral flexion & anti-rotation endurance (Side Plank + Suitcase Carry with water-bottle backpack) for Miluim & future carry resilience"
 
 current_baseline_routine:
   swimming:
@@ -59,11 +59,11 @@ time_budget_addition:
 
 equipment_available:
   home:
-    - "bodyweight & floor mat"
-    - "backpack with water bottles / books (4-20 kg)"
-    - "sturdy chair / table / doorframe towel"
-  optional_park:
-    - "pull-up bar & parallel bars / low bar"
+    - "אפס ציוד כושר בבית (משקל גוף ומזרון/שטיח בלבד)"
+    - "ציוד ביתי שגרתי: ספה/מיטה, שני כיסאות יציבים, שולחן יציב, משקוף+מגבת"
+    - "תיק גב ממולא בקבוקי מים (1.5 ליטר = 1.5 ק\"ג, שישייה = 9 ק\"ג; טווח מדוד 3-20 ק\"ג)"
+  outdoors:
+    - "מתח חיצוני בלבד (1-2 פעמים בשבוע: יום ב' קבוע + אופציה ביום ג')"
 
 progression_tracking:
   current_stage: 1

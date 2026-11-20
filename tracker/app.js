@@ -317,12 +317,17 @@
       pill.className = "pill accent";
       pill.textContent = modeLabel;
 
+      const locPill = document.createElement("span");
+      locPill.className = "pill purple";
+      locPill.textContent = day.locationBadge || "🏠 בבית";
+
       const coachBtn = document.createElement("button");
       coachBtn.type = "button";
       coachBtn.className = "btn small primary";
       coachBtn.textContent = "🎬 מצב מאמן ליום זה";
       coachBtn.addEventListener("click", () => launchCoachPreset(dayKey));
 
+      btnGroup.appendChild(locPill);
       btnGroup.appendChild(pill);
       btnGroup.appendChild(coachBtn);
       head.appendChild(titleEl);
