@@ -1,0 +1,12 @@
+# OS & Editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*.tmp
+
+# Local browser exports & personal private backups
+logs/local-exports/
+*.backup.json

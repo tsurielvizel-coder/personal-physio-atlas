@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>אטלס-פיזיו | מעקב 10 שלבים, טיימר ומוכנות למילואים</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --bg-card: #111a2e;
+      --bg-elevated: #17233c;
+      --border: #253555;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-strong: #0284c7;
+      --green: #22c55e;
+      --green-bg: rgba(34, 197, 94, 0.14);
+      --yellow: #eab308;
+      --yellow-bg: rgba(234, 179, 8, 0.15);
+      --red: #ef4444;
+      --red-bg: rgba(239, 68, 68, 0.15);
+      --purple: #a78bfa;
+      --radius: 14px;
+      --shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: radial-gradient(circle at top right, #162444 0%, var(--bg) 55%);
+      color: var(--text);
+      line-height: 1.55;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 20px 16px 64px;
+    }
+
+    header.hero {
+      background: linear-gradient(135deg, #13203d 0%, #0f172a 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+    }
+
+    .hero-top {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      margin: 0;
+      font-size: 0.95rem;
+    }
+
+    .badges-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+    }
+
+    .pill.green { color: #86efac; background: var(--green-bg); border-color: rgba(34, 197, 94, 0.35); }
+    .pill.accent { color: #7dd3fc; border-color: rgba(56, 189, 248, 0.35); }
+    .pill.purple { color: #ddd6fe; border-color: rgba(167, 139, 250, 0.35); }
+
+    .progress-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .meter-box {
+      background: rgba(11, 17, 32, 0.55);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+    }
+
+    .meter-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .progress-track {
+      height: 9px;
+      background: #0a0f1d;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid #1f2d47;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-strong), var(--green));
+      border-radius: 999px;
+      transition: width 0.35s ease;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 14px 16px;
+      border-radius: var(--radius);
+    }
+
+    .control-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    select, input, textarea {
+      background: var(--bg-elevated);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 8px 12px;
+      font-family: inherit;
+      font-size: 0.92rem;
+    }
+
+    select:focus, input:focus, textarea:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+
+    .btn {
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      color: var(--text);
+      padding: 8px 14px;
+      border-radius: 9px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.16s ease;
+    }
+
+    .btn:hover { border-color: var(--accent); transform: translateY(-1px); }
+    .btn.active, .btn.primary {
+      background: linear-gradient(135deg, var(--accent-strong), #0369a1);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .btn.success {
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      border-color: var(--green);
+      color: #fff;
+    }
+    .btn.warning {
+      background: linear-gradient(135deg, #ca8a04, #a16207);
+      border-color: var(--yellow);
+      color: #fff;
+    }
+    .btn.danger-outline {
+      border-color: rgba(239, 68, 68, 0.45);
+      color: #fca5a5;
+    }
+    .btn.small { padding: 5px 10px; font-size: 0.82rem; }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .tab-btn {
+      padding: 9px 16px;
+      border-radius: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.92rem;
+    }
+
+    .tab-btn.active {
+      background: var(--bg-elevated);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1.55fr 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    @media (max-width: 920px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+
+    .card h2, .card h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+
+    .stage-banner {
+      border-right: 4px solid var(--accent);
+      padding-right: 12px;
+      margin-bottom: 14px;
+    }
+
+    .stage-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .core-box {
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.28);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      font-size: 0.9rem;
+    }
+
+    .core-box ul {
+      margin: 6px 0 0;
+      padding-right: 18px;
+    }
+
+    .workout-day {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .workout-day h4 {
+      margin: 0 0 10px;
+      color: #7dd3fc;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .exercise-item {
+      background: rgba(11, 17, 32, 0.55);
+      border: 1px solid #22304d;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+
+    .exercise-item:last-child { margin-bottom: 0; }
+
+    .ex-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-weight: 700;
+    }
+
+    .ex-dose { color: #86efac; font-size: 0.88rem; }
+    .ex-cue { color: var(--text-muted); font-size: 0.85rem; margin-top: 3px; }
+
+    /* Timer */
+    .timer-display {
+      font-size: 3rem;
+      font-weight: 800;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 2px;
+      margin: 8px 0 12px;
+      color: var(--accent);
+    }
+
+    .timer-presets, .timer-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+
+    /* Office Snack */
+    .snack-box {
+      background: rgba(167, 139, 250, 0.08);
+      border: 1px solid rgba(167, 139, 250, 0.35);
+      border-radius: 11px;
+      padding: 14px;
+    }
+
+    .snack-box ol { margin: 8px 0; padding-right: 20px; }
+
+    /* Test checklist */
+    .check-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+
+    .check-row input[type="checkbox"] {
+      width: 19px;
+      height: 19px;
+      margin-top: 2px;
+      accent-color: var(--green);
+    }
+
+    .sym-calc {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      padding: 14px;
+      border-radius: 10px;
+      margin: 12px 0;
+    }
+
+    .sym-result {
+      padding: 10px 14px;
+      border-radius: 9px;
+      font-weight: 700;
+      margin-top: 8px;
+    }
+
+    .status-green { background: var(--green-bg); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.4); }
+    .status-yellow { background: var(--yellow-bg); color: #fde047; border: 1px solid rgba(234, 179, 8, 0.4); }
+    .status-red { background: var(--red-bg); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.45); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      margin-top: 10px;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--border);
+      padding: 9px 8px;
+      text-align: right;
+    }
+
+    th { color: var(--text-muted); font-weight: 700; }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    label.field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: #16a34a;
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-weight: 700;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px);
+      transition: all 0.25s ease;
+      z-index: 999;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    details.card-details summary {
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .muted { color: var(--text-muted); font-size: 0.88rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <div class="hero-top">
+        <div>
+          <h1>אטלס-פיזיו: תכנית 10 שלבים לגב ברזל ומילואים</h1>
+          <p class="subtitle">פיזיותרפיה אקטיבית + קליסתניקס + מדע ההתמדה | עבודה עצמאית 100% אופליין</p>
+        </div>
+        <div class="badges-row">
+          <span class="pill green" id="streakBadge">🔥 רצף שבועי: 0 אימונים | מוכן לפעולה</span>
+          <span class="pill accent" id="activeStageBadge">שלב נוכחי: 1 / 10</span>
+          <span class="pill purple" id="totalLogsBadge">סה"כ אימונים: 0</span>
+        </div>
+      </div>
+
+      <div class="progress-grid">
+        <div class="meter-box">
+          <div class="meter-label">
+            <span>התקדמות במסלול 10 השלבים</span>
+            <span id="stagePctLabel">10%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" id="stageProgressFill" style="width: 10%;"></div></div>
+        </div>
+        <div class="meter-box">
+          <div class="meter-label">
+            <span>מד מוכנות גב וסיבולת למילואים</span>
+            <span id="miluimPctLabel">15%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" id="miluimProgressFill" style="width: 15%;"></div></div>
+        </div>
+      </div>
+    </header>
+
+    <section class="toolbar">
+      <div class="control-group">
+        <label for="stageSelect" style="font-weight:700;">בחר שלב:</label>
+        <select id="stageSelect"></select>
+      </div>
+
+      <div class="control-group" role="group" aria-label="בחירת מצב שבועי">
+        <span style="font-weight:700; color:var(--text-muted);">מצב שבועי:</span>
+        <button class="btn active" id="btnMode30" data-mode="mode30">+30 דק' (עמוס)</button>
+        <button class="btn" id="btnMode60" data-mode="mode60">+60 דק' (אופטימלי)</button>
+        <button class="btn" id="btnMode5" data-mode="mode5">⚡ חירום 5 דק'</button>
+      </div>
+    </section>
+
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="workoutTab">🏋️ תכנית האימון וטיימר</button>
+      <button class="tab-btn" data-tab="testTab">🎯 מבחן מעבר שלב + סימטריה</button>
+      <button class="tab-btn" data-tab="logTab">📓 יומן רמזור כאב וגיבוי</button>
+      <button class="tab-btn" data-tab="placementTab">🧭 מבחן שיבוץ וכללי רמזור</button>
+    </nav>
+
+    <!-- TAB 1: WORKOUT & TIMER -->
+    <section id="workoutTab" class="tab-panel active">
+      <div class="grid-2">
+        <div>
+          <div class="card">
+            <div class="stage-banner">
+              <h2 id="stageTitle">שלב 1</h2>
+              <p class="muted" id="stageSubtitle" style="margin:0;"></p>
+              <div class="stage-meta">
+                <span class="pill" id="stageDurationPill">⏱️ זמן משוער: 2-3 שבועות</span>
+                <span class="pill purple" id="stageUnlockPill">🏆 פתיחה: ...</span>
+              </div>
+            </div>
+            <p style="margin-top:0;"><strong>מוקד השלב:</strong> <span id="stageFocus"></span></p>
+
+            <div class="core-box" id="coreIntegrationBox">
+              <strong>🧱 שילוב רוטינת הבסיס שלך (3×/שבוע לפני התוספת):</strong>
+              <ul id="coreIntegrationList"></ul>
+            </div>
+
+            <div id="workoutsContainer"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <h3>⏱️ טיימר אימון חכם</h3>
+            <div class="timer-display" id="timerDisplay">00:35</div>
+            <div class="timer-presets">
+              <button class="btn small" data-sec="10">10 שנ' (קוברה)</button>
+              <button class="btn small" data-sec="25">25 שנ'</button>
+              <button class="btn small" data-sec="35">35 שנ' (פלאנק)</button>
+              <button class="btn small" data-sec="45">45 שנ' (נשיאה)</button>
+              <button class="btn small" data-sec="60">60 שנ'</button>
+              <button class="btn small" data-sec="90">90 שנ' (חטיף)</button>
+            </div>
+            <div class="timer-actions">
+              <input type="number" id="customSecondsInput" min="5" max="3600" value="35" style="width:90px; text-align:center;" aria-label="שניות מותאמות">
+              <button class="btn primary" id="timerStartPauseBtn">התחל</button>
+              <button class="btn" id="timerResetBtn">איפוס</button>
+            </div>
+            <p class="muted" style="text-align:center; margin:6px 0 0;">משמיע צליל עדין בסיום הסט (Web Audio אופליין).</p>
+          </div>
+
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px;">
+              <h3 style="margin:0;">⚡ חטיף תנועה למשרד (90 שנ')</h3>
+              <button class="btn small" id="nextSnackBtn">החלף חטיף 🔄</button>
+            </div>
+            <div class="snack-box" id="snackBox">
+              <strong id="snackTitle"></strong>
+              <ol id="snackSteps"></ol>
+              <p class="muted" id="snackBenefit" style="margin:4px 0 10px;"></p>
+              <button class="btn primary small" id="startSnackTimerBtn">הפעל טיימר 90 שניות לחטיף</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>✅ סימון מהיר של אימון היום</h3>
+            <p class="muted" style="margin-top:0;">שמור רצף לפי כלל *"לא מפספסים פעמיים"* (Milkman et al., 2021):</p>
+            <div class="form-grid">
+              <label class="field">סשן
+                <select id="quickSessionSelect">
+                  <option value="A">אימון A (שרשרת אחורית + דחיפה)</option>
+                  <option value="B">אימון B (רגליים + משיכה)</option>
+                  <option value="C">אימון C (קליסתניקס + נשיאה)</option>
+                  <option value="חירום 5 דק'">חירום 5 דק'</option>
+                  <option value="שחייה 30 דק'">שחייה 30 דק'</option>
+                </select>
+              </label>
+              <label class="field">כאב גב (0–10)
+                <input type="number" id="quickPainInput" min="0" max="10" value="1">
+              </label>
+              <label class="field">חיוניות ואנרגיה (1–5)
+                <input type="number" id="quickEnergyInput" min="1" max="5" value="4">
+              </label>
+            </div>
+            <button class="btn success" style="width:100%;" id="quickLogBtn">סיימתי את האימון! שמור ביומן ✓</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: LEVEL-UP TEST & SYMMETRY -->
+    <section id="testTab" class="tab-panel">
+      <div class="grid-2">
+        <div class="card">
+          <h2 id="testStageHeading">מבחן מעבר שלב</h2>
+          <p class="muted">סמן את כל סעיפי הבדיקה שבוצעו באותו יום בדיקה בטכניקה נקייה. המעבר מותר רק כשהגב ירוק תוך 24 שעות.</p>
+          <div id="levelUpChecklist"></div>
+
+          <label class="check-row" style="border-color: rgba(34, 197, 94, 0.45); margin-top:12px;">
+            <input type="checkbox" id="test24hPainCheck">
+            <span><strong>תנאי רמזור 24 שעות:</strong> כאב בזמן המבחן &le; 2/10 ואין החמרה או נוקשות בגב למחרת בבוקר.</span>
+          </label>
+
+          <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+            <button class="btn success" id="graduateStageBtn">🎓 עברתי הכול! עבור לשלב הבא</button>
+            <span class="muted" id="graduateHint"></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>⚖️ מחשבון סימטריה ימין–שמאל (עקמת ואקדח)</h3>
+          <p class="muted" style="margin-top:0;">
+            הזן את תוצאת הפלאנק הצידי (בשניות) או החזרות בצד ימין מול צד שמאל. בשלב זה הפער המותר הוא <strong id="symLimitDisplay">15%</strong>.
+          </p>
+          <div class="sym-calc">
+            <label class="field">צד ימין (שניות/חזרות)
+              <input type="number" id="symRightInput" min="1" value="32">
+            </label>
+            <label class="field">צד שמאל (שניות/חזרות)
+              <input type="number" id="symLeftInput" min="1" value="30">
+            </label>
+          </div>
+          <div id="symResultBox" class="sym-result status-green">פער נוכחי: 6.3% — תקין לסימטריה!</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: WORKOUT LOG & BACKUP -->
+    <section id="logTab" class="tab-panel">
+      <div class="card">
+        <h3>➕ הוספת רישום מפורט ליומן</h3>
+        <div class="form-grid">
+          <label class="field">תאריך
+            <input type="date" id="logDateInput">
+          </label>
+          <label class="field">שלב
+            <input type="number" id="logStageInput" min="1" max="10" value="1">
+          </label>
+          <label class="field">מצב שבועי
+            <select id="logModeSelect">
+              <option value="+30 דק'">+30 דק'</option>
+              <option value="+60 דק'">+60 דק'</option>
+              <option value="חירום 5 דק'">חירום 5 דק'</option>
+              <option value="שחייה 30 דק'">שחייה 30 דק'</option>
+            </select>
+          </label>
+          <label class="field">סשן
+            <select id="logSessionSelect">
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+              <option value="שחייה">שחייה</option>
+              <option value="מבחן שלב">מבחן שלב</option>
+            </select>
+          </label>
+          <label class="field">כאב באימון (0–10)
+            <input type="number" id="logPainInput" min="0" max="10" value="1">
+          </label>
+          <label class="field">גב למחרת
+            <select id="logNextDaySelect">
+              <option value="ירוק">ירוק (תקין)</option>
+              <option value="צהוב">צהוב (רגישות קלה &lt;24ש')</option>
+              <option value="אדום">אדום (החמרה)</option>
+            </select>
+          </label>
+          <label class="field">אנרגיה (1–5)
+            <input type="number" id="logEnergyInput" min="1" max="5" value="4">
+          </label>
+        </div>
+        <label class="field" style="margin-bottom:10px;">הערות (נשיאת אקדח / תרגילים / פער ימין-שמאל)
+          <input type="text" id="logNotesInput" placeholder="למשל: אגן יציב בדד-באג, הליכה עם אקדח עברה חלק">
+        </label>
+        <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between;">
+          <button class="btn primary" id="addDetailedLogBtn">שמור רשומה ביומן</button>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn small" id="exportJsonBtn">⬇️ ייצוא גיבוי JSON</button>
+            <label class="btn small" style="display:inline-flex; align-items:center;">
+              ⬆️ ייבוא גיבוי JSON
+              <input type="file" id="importJsonInput" accept="application/json" style="display:none;">
+            </label>
+            <button class="btn small danger-outline" id="clearLogsBtn">נקה יומן</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📊 היסטוריית אימונים (נשמר בדפדפן)</h3>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>תאריך</th>
+                <th>שלב</th>
+                <th>מצב</th>
+                <th>סשן</th>
+                <th>כאב</th>
+                <th>למחרת</th>
+                <th>אנרגיה</th>
+                <th>הערות</th>
+                <th>פעולה</th>
+              </tr>
+            </thead>
+            <tbody id="logsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: PLACEMENT TEST & TRAFFIC LIGHT -->
+    <section id="placementTab" class="tab-panel">
+      <div class="grid-2">
+        <div class="card">
+          <h2 id="placementTitle">מבחן שיבוץ מהיר</h2>
+          <p class="muted" id="placementDesc"></p>
+          <div id="placementRulesContainer"></div>
+        </div>
+        <div class="card">
+          <h3>🚦 כלל רמזור 24 שעות לבריאות הגב</h3>
+          <div id="trafficLightsContainer"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="toast" id="toastEl"></div>
+
+  <script src="./stages-data.js"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      const DATA = window.ATLAS_STAGES_DATA;
+      if (!DATA || !Array.isArray(DATA.stages)) {
+        document.body.innerHTML = "<div style='padding:40px;color:#fff;'>שגיאה בטעינת קובץ הנתונים stages-data.js</div>";
+        return;
+      }
+
+      const STORAGE_KEY = "atlas_physio_state_v1";
+      const defaultState = {
+        currentStageId: 1,
+        mode: "mode30",
+        snackIndex: 0,
+        testChecks: {},
+        logs: []
+      };
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return Object.assign({}, defaultState);
+          const parsed = JSON.parse(raw);
+          return Object.assign({}, defaultState, parsed);
+        } catch (e) {
+          return Object.assign({}, defaultState);
+        }
+      }
+
+      let state = loadState();
+      function saveState() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (e) {
+          // ignore storage quota errors
+        }
+      }
+
+      function showToast(msg) {
+        const el = document.getElementById("toastEl");
+        el.textContent = msg;
+        el.classList.add("show");
+        clearTimeout(showToast._t);
+        showToast._t = setTimeout(() => el.classList.remove("show"), 2600);
+      }
+
+      function getCurrentStage() {
+        return DATA.stages.find((s) => s.id === Number(state.currentStageId)) || DATA.stages[0];
+      }
+
+      // Populate stage selector
+      const stageSelect = document.getElementById("stageSelect");
+      DATA.stages.forEach((st) => {
+        const opt = document.createElement("option");
+        opt.value = st.id;
+        opt.textContent = st.title;
+        stageSelect.appendChild(opt);
+      });
+
+      function renderHeader() {
+        const st = getCurrentStage();
+        stageSelect.value = st.id;
+        const stagePct = Math.round((st.id / DATA.stages.length) * 100);
+        document.getElementById("activeStageBadge").textContent = "שלב נוכחי: " + st.id + " / " + DATA.stages.length;
+        document.getElementById("stagePctLabel").textContent = stagePct + "%";
+        document.getElementById("stageProgressFill").style.width = stagePct + "%";
+        document.getElementById("miluimPctLabel").textContent = st.miluimReadinessPct + "%";
+        document.getElementById("miluimProgressFill").style.width = st.miluimReadinessPct + "%";
+        document.getElementById("totalLogsBadge").textContent = 'סה"כ אימונים: ' + state.logs.length;
+
+        const now = new Date();
+        const weekAgo = new Date(now.getTime() - 7 * 86400000);
+        const recent = state.logs.filter((l) => {
+          const d = new Date(l.date);
+          return !isNaN(d.getTime()) && d >= weekAgo;
+        }).length;
+        const streakEl = document.getElementById("streakBadge");
+        if (recent >= 3) {
+          streakEl.textContent = "🔥 שבוע חזק! " + recent + " סשנים ב-7 ימים";
+        } else if (recent >= 1) {
+          streakEl.textContent = "💪 " + recent + " סשנים השבוע (כלל: לא מפספסים פעמיים)";
+        } else {
+          streakEl.textContent = "⚡ פתח אימון (או 5 דק' חירום) כדי להתחיל רצף";
+        }
+      }
+
+      function renderModeButtons() {
+        document.querySelectorAll("[data-mode]").forEach((btn) => {
+          btn.classList.toggle("active", btn.getAttribute("data-mode") === state.mode);
+        });
+      }
+
+      function renderWorkouts() {
+        const st = getCurrentStage();
+        document.getElementById("stageTitle").textContent = st.title;
+        document.getElementById("stageSubtitle").textContent = st.subtitle;
+        document.getElementById("stageDurationPill").textContent = "⏱️ זמן משוער: " + st.estimatedWeeks;
+        document.getElementById("stageUnlockPill").textContent = "🏆 יעד כיף: " + st.funUnlock;
+        document.getElementById("stageFocus").textContent = st.focus;
+
+        const coreList = document.getElementById("coreIntegrationList");
+        coreList.innerHTML = "";
+        const coreLabels = [
+          ["בירד-דוג", st.coreIntegration.birdDog],
+          ["פלאנק", st.coreIntegration.plank],
+          ["שדרוג הרמות רגליים", st.coreIntegration.legRaiseUpgrade],
+          ["פלאנק צידי / אגן", st.coreIntegration.sideHipUpgrade],
+          ["קוברה", st.coreIntegration.cobra]
+        ];
+        coreLabels.forEach(([k, v]) => {
+          const li = document.createElement("li");
+          li.innerHTML = "<strong>" + escapeHtml(k) + ":</strong> " + escapeHtml(v);
+          coreList.appendChild(li);
+        });
+
+        const container = document.getElementById("workoutsContainer");
+        container.innerHTML = "";
+
+        if (state.mode === "mode5") {
+          const em = DATA.emergencyMode;
+          const div = document.createElement("div");
+          div.className = "workout-day";
+          div.style.borderColor = "var(--yellow)";
+          div.innerHTML = "<h4><span>⚡ " + escapeHtml(em.title) + "</span><span class='pill'>" + em.durationMin + " דקות סה\"כ</span></h4>" +
+            "<p class='muted' style='margin-top:0;'>" + escapeHtml(em.subtitle) + "</p>";
+          em.exercises.forEach((ex) => div.appendChild(buildExerciseCard(ex)));
+          container.appendChild(div);
+          return;
+        }
+
+        const modeKey = state.mode === "mode60" ? "mode60" : "mode30";
+        const modeLabel = state.mode === "mode60" ? "+20 דק' לאימון" : "+10 דק' לאימון";
+        ["dayA", "dayB", "dayC"].forEach((dayKey) => {
+          const day = st.workouts[dayKey];
+          const dayBox = document.createElement("div");
+          dayBox.className = "workout-day";
+          dayBox.innerHTML = "<h4><span>" + escapeHtml(day.title) + "</span><span class='pill accent'>" + modeLabel + "</span></h4>";
+          (day[modeKey] || []).forEach((ex) => {
+            dayBox.appendChild(buildExerciseCard(ex));
+          });
+          container.appendChild(dayBox);
+        });
+      }
+
+      function buildExerciseCard(ex) {
+        const item = document.createElement("div");
+        item.className = "exercise-item";
+        item.innerHTML =
+          "<div class='ex-top'><span>" + escapeHtml(ex.name) + "</span><span class='ex-dose'>" + escapeHtml(ex.setsReps) + "</span></div>" +
+          "<div class='ex-cue'>דגש טכני: " + escapeHtml(ex.cue) + "</div>";
+        return item;
+      }
+
+      function renderSnack() {
+        const snacks = DATA.officeSnacks;
+        const idx = Math.abs(state.snackIndex) % snacks.length;
+        const sn = snacks[idx];
+        document.getElementById("snackTitle").textContent = (idx + 1) + "/" + snacks.length + ": " + sn.title;
+        const ol = document.getElementById("snackSteps");
+        ol.innerHTML = "";
+        sn.steps.forEach((s) => {
+          const li = document.createElement("li");
+          li.textContent = s;
+          ol.appendChild(li);
+        });
+        document.getElementById("snackBenefit").textContent = "למה זה עובד: " + sn.benefit;
+      }
+
+      function renderLevelUpTest() {
+        const st = getCurrentStage();
+        document.getElementById("testStageHeading").textContent = "מבחן מעבר שלב " + st.id + " → " + Math.min(10, st.id + 1);
+        document.getElementById("symLimitDisplay").textContent = st.symmetryLimitPct + "%";
+
+        const list = document.getElementById("levelUpChecklist");
+        list.innerHTML = "";
+        const savedMap = state.testChecks[st.id] || {};
+
+        st.levelUpTest.forEach((itemText, i) => {
+          const label = document.createElement("label");
+          label.className = "check-row";
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.checked = Boolean(savedMap[i]);
+          cb.addEventListener("change", () => {
+            if (!state.testChecks[st.id]) state.testChecks[st.id] = {};
+            state.testChecks[st.id][i] = cb.checked;
+            saveState();
+          });
+          const span = document.createElement("span");
+          span.textContent = itemText;
+          label.appendChild(cb);
+          label.appendChild(span);
+          list.appendChild(label);
+        });
+
+        const pain24h = document.getElementById("test24hPainCheck");
+        pain24h.checked = Boolean(savedMap["pain24h"]);
+        pain24h.onchange = () => {
+          if (!state.testChecks[st.id]) state.testChecks[st.id] = {};
+          state.testChecks[st.id]["pain24h"] = pain24h.checked;
+          saveState();
+        };
+
+        const hint = document.getElementById("graduateHint");
+        hint.textContent = st.id === 10 ? "זהו שלב הגמר! סיום מוצלח מעניק תעודת מאסטר 'אטלס גב-ברזל'." : "";
+        updateSymmetry();
+      }
+
+      function updateSymmetry() {
+        const st = getCurrentStage();
+        const r = parseFloat(document.getElementById("symRightInput").value) || 0;
+        const l = parseFloat(document.getElementById("symLeftInput").value) || 0;
+        const box = document.getElementById("symResultBox");
+        if (r <= 0 || l <= 0) {
+          box.className = "sym-result status-yellow";
+          box.textContent = "הזן מספרים חיוביים משני הצדדים.";
+          return false;
+        }
+        const maxVal = Math.max(r, l);
+        const diffPct = ((maxVal - Math.min(r, l)) / maxVal) * 100;
+        const rounded = diffPct.toFixed(1);
+        if (diffPct <= st.symmetryLimitPct) {
+          box.className = "sym-result status-green";
+          box.textContent = "פער נוכחי: " + rounded + "% (מותר עד " + st.symmetryLimitPct + "%) — מאוזן ועובר!";
+          return true;
+        } else {
+          box.className = "sym-result status-red";
+          const weaker = r < l ? "ימין" : "שמאל";
+          box.textContent = "פער נוכחי: " + rounded + "% (חורג מהמותר " + st.symmetryLimitPct + "%). תעדף תמיד להתחיל מצד " + weaker + "!";
+          return false;
+        }
+      }
+
+      function renderPlacementAndTraffic() {
+        const pt = DATA.placementTest;
+        document.getElementById("placementTitle").textContent = pt.title;
+        document.getElementById("placementDesc").textContent = pt.description;
+        const pContainer = document.getElementById("placementRulesContainer");
+        pContainer.innerHTML = "";
+        pt.rules.forEach((rule, idx) => {
+          const div = document.createElement("div");
+          div.className = "exercise-item";
+          div.style.marginBottom = "10px";
+          div.innerHTML =
+            "<div class='ex-top'><span>בדיקה " + (idx + 1) + ": " + escapeHtml(rule.check) + "</span></div>" +
+            "<div class='ex-cue' style='color:#fde047;'>המלצה: " + escapeHtml(rule.failAction) + "</div>";
+          pContainer.appendChild(div);
+        });
+
+        const tContainer = document.getElementById("trafficLightsContainer");
+        tContainer.innerHTML = "";
+        const tl = DATA.trafficLightRules;
+        [["green", "status-green"], ["yellow", "status-yellow"], ["red", "status-red"]].forEach(([key, cls]) => {
+          const item = tl[key];
+          const div = document.createElement("div");
+          div.className = "sym-result " + cls;
+          div.style.marginBottom = "10px";
+          div.innerHTML = "<div>" + escapeHtml(item.label) + "</div><div style='font-weight:400; margin-top:4px;'>" + escapeHtml(item.action) + "</div>";
+          tContainer.appendChild(div);
+        });
+      }
+
+      function renderLogsTable() {
+        const tbody = document.getElementById("logsTableBody");
+        tbody.innerHTML = "";
+        if (!state.logs.length) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = "<td colspan='9' class='muted' style='text-align:center; padding:18px;'>עדיין אין אימונים מתועדים. סמן אימון ראשון כדי להתחיל רצף!</td>";
+          tbody.appendChild(tr);
+          return;
+        }
+        state.logs.slice().reverse().forEach((entry, revIdx) => {
+          const origIdx = state.logs.length - 1 - revIdx;
+          const tr = document.createElement("tr");
+          const nextCls = entry.nextDay === "אדום" ? "color:#fca5a5" : entry.nextDay === "צהוב" ? "color:#fde047" : "color:#86efac";
+          tr.innerHTML =
+            "<td>" + escapeHtml(entry.date) + "</td>" +
+            "<td>" + escapeHtml(String(entry.stage)) + "</td>" +
+            "<td>" + escapeHtml(entry.mode) + "</td>" +
+            "<td>" + escapeHtml(entry.session) + "</td>" +
+            "<td>" + escapeHtml(String(entry.pain)) + "/10</td>" +
+            "<td style='font-weight:700;" + nextCls + "'>" + escapeHtml(entry.nextDay) + "</td>" +
+            "<td>" + escapeHtml(String(entry.energy)) + "/5</td>" +
+            "<td>" + escapeHtml(entry.notes || "-") + "</td>" +
+            "<td><button class='btn small danger-outline' data-del-idx='" + origIdx + "'>מחק</button></td>";
+          tbody.appendChild(tr);
+        });
+
+        tbody.querySelectorAll("[data-del-idx]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const idx = Number(btn.getAttribute("data-del-idx"));
+            state.logs.splice(idx, 1);
+            saveState();
+            renderHeader();
+            renderLogsTable();
+          });
+        });
+      }
+
+      // Timer logic
+      let timerSeconds = 35;
+      let timerInterval = null;
+      function formatTime(sec) {
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+      }
+      function updateTimerUI() {
+        document.getElementById("timerDisplay").textContent = formatTime(timerSeconds);
+      }
+      function stopTimer() {
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+        document.getElementById("timerStartPauseBtn").textContent = "התחל";
+      }
+      function playDoneBeep() {
+        try {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return;
+          const ctx = new AudioCtx();
+          [523.25, 659.25].forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "sine";
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.12, ctx.currentTime + idx * 0.16);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.16 + 0.25);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + idx * 0.16);
+            osc.stop(ctx.currentTime + idx * 0.16 + 0.26);
+          });
+        } catch (e) {
+          // ignore audio block
+        }
+      }
+      function startTimer() {
+        if (timerInterval) return;
+        if (timerSeconds <= 0) {
+          timerSeconds = Math.max(5, parseInt(document.getElementById("customSecondsInput").value, 10) || 35);
+          updateTimerUI();
+        }
+        document.getElementById("timerStartPauseBtn").textContent = "השהה";
+        timerInterval = setInterval(() => {
+          timerSeconds -= 1;
+          updateTimerUI();
+          if (timerSeconds <= 0) {
+            stopTimer();
+            playDoneBeep();
+            showToast("⏱️ הסט הסתיים! כל הכבוד!");
+          }
+        }, 1000);
+      }
+
+      document.querySelectorAll("[data-sec]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          stopTimer();
+          timerSeconds = Number(btn.getAttribute("data-sec"));
+          document.getElementById("customSecondsInput").value = timerSeconds;
+          updateTimerUI();
+        });
+      });
+
+      document.getElementById("timerStartPauseBtn").addEventListener("click", () => {
+        if (timerInterval) stopTimer();
+        else startTimer();
+      });
+
+      document.getElementById("timerResetBtn").addEventListener("click", () => {
+        stopTimer();
+        timerSeconds = Math.max(5, parseInt(document.getElementById("customSecondsInput").value, 10) || 35);
+        updateTimerUI();
+      });
+
+      document.getElementById("customSecondsInput").addEventListener("change", (e) => {
+        stopTimer();
+        timerSeconds = Math.max(5, parseInt(e.target.value, 10) || 35);
+        updateTimerUI();
+      });
+
+      // Snack buttons
+      document.getElementById("nextSnackBtn").addEventListener("click", () => {
+        state.snackIndex = (state.snackIndex + 1) % DATA.officeSnacks.length;
+        saveState();
+        renderSnack();
+      });
+
+      document.getElementById("startSnackTimerBtn").addEventListener("click", () => {
+        stopTimer();
+        timerSeconds = 90;
+        document.getElementById("customSecondsInput").value = 90;
+        updateTimerUI();
+        startTimer();
+        showToast("⚡ טיימר 90 שנ' לחטיף תנועה הופעל!");
+      });
+
+      // Mode & Stage change
+      stageSelect.addEventListener("change", (e) => {
+        state.currentStageId = Number(e.target.value);
+        document.getElementById("logStageInput").value = state.currentStageId;
+        saveState();
+        renderAll();
+      });
+
+      document.querySelectorAll("[data-mode]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          state.mode = btn.getAttribute("data-mode");
+          saveState();
+          renderModeButtons();
+          renderWorkouts();
+        });
+      });
+
+      // Tabs
+      document.querySelectorAll(".tab-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const target = btn.getAttribute("data-tab");
+          document.querySelectorAll(".tab-btn").forEach((b) => b.classList.toggle("active", b === btn));
+          document.querySelectorAll(".tab-panel").forEach((p) => p.classList.toggle("active", p.id === target));
+        });
+      });
+
+      // Symmetry listeners
+      document.getElementById("symRightInput").addEventListener("input", updateSymmetry);
+      document.getElementById("symLeftInput").addEventListener("input", updateSymmetry);
+
+      // Graduate Stage
+      document.getElementById("graduateStageBtn").addEventListener("click", () => {
+        const st = getCurrentStage();
+        const savedMap = state.testChecks[st.id] || {};
+        const allChecked = st.levelUpTest.every((_, i) => Boolean(savedMap[i]));
+        if (!allChecked) {
+          showToast("⚠️ סמן את כל סעיפי הבדיקה לפני מעבר שלב");
+          return;
+        }
+        if (!savedMap["pain24h"]) {
+          showToast("⚠️ ודא תנאי רמזור 24 שעות (גב ירוק למחרת)");
+          return;
+        }
+        if (!updateSymmetry()) {
+          showToast("⚠️ הפער בין ימין לשמאל גדול מהסף המותר לשלב");
+          return;
+        }
+        const todayStr = new Date().toISOString().slice(0, 10);
+        state.logs.push({
+          date: todayStr,
+          stage: st.id,
+          mode: state.mode === "mode60" ? "+60 דק'" : state.mode === "mode5" ? "חירום 5 דק'" : "+30 דק'",
+          session: "מבחן שלב",
+          pain: 1,
+          nextDay: "ירוק",
+          energy: 5,
+          notes: "מעבר מוצלח של שלב " + st.id + "!"
+        });
+        if (st.id < 10) {
+          state.currentStageId = st.id + 1;
+          saveState();
+          renderAll();
+          showToast("🎉 כל הכבוד! עלית לשלב " + state.currentStageId + "!");
+        } else {
+          saveState();
+          renderAll();
+          showToast("🏆 מאסטר אטלס גב-ברזל! השלמת את כל 10 השלבים!");
+        }
+      });
+
+      // Quick Log & Detailed Log
+      const todayISO = new Date().toISOString().slice(0, 10);
+      document.getElementById("logDateInput").value = todayISO;
+      document.getElementById("logStageInput").value = state.currentStageId;
+
+      document.getElementById("quickLogBtn").addEventListener("click", () => {
+        const pain = Number(document.getElementById("quickPainInput").value) || 0;
+        const energy = Number(document.getElementById("quickEnergyInput").value) || 4;
+        const sess = document.getElementById("quickSessionSelect").value;
+        const modeText = sess.includes("חירום") ? "חירום 5 דק'" : sess.includes("שחייה") ? "שחייה 30 דק'" : (state.mode === "mode60" ? "+60 דק'" : state.mode === "mode5" ? "חירום 5 דק'" : "+30 דק'");
+        state.logs.push({
+          date: new Date().toISOString().slice(0, 10),
+          stage: state.currentStageId,
+          mode: modeText,
+          session: sess,
+          pain: pain,
+          nextDay: pain <= 2 ? "ירוק" : pain <= 4 ? "צהוב" : "אדום",
+          energy: energy,
+          notes: "רישום מהיר"
+        });
+        saveState();
+        renderHeader();
+        renderLogsTable();
+        showToast("✅ האימון נשמר ביומן! המשך רצף מעולה");
+      });
+
+      document.getElementById("addDetailedLogBtn").addEventListener("click", () => {
+        state.logs.push({
+          date: document.getElementById("logDateInput").value || new Date().toISOString().slice(0, 10),
+          stage: Number(document.getElementById("logStageInput").value) || state.currentStageId,
+          mode: document.getElementById("logModeSelect").value,
+          session: document.getElementById("logSessionSelect").value,
+          pain: Number(document.getElementById("logPainInput").value) || 0,
+          nextDay: document.getElementById("logNextDaySelect").value,
+          energy: Number(document.getElementById("logEnergyInput").value) || 4,
+          notes: document.getElementById("logNotesInput").value.trim()
+        });
+        document.getElementById("logNotesInput").value = "";
+        saveState();
+        renderHeader();
+        renderLogsTable();
+        showToast("✅ הרשומה נוספה ליומן");
+      });
+
+      // Export / Import / Clear
+      document.getElementById("exportJsonBtn").addEventListener("click", () => {
+        const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "atlas-physio-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      document.getElementById("importJsonInput").addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const imported = JSON.parse(String(reader.result));
+            state = Object.assign({}, defaultState, imported);
+            saveState();
+            renderAll();
+            showToast("⬆️ הגיבוי שוחזר בהצלחה!");
+          } catch (err) {
+            showToast("❌ קובץ גיבוי לא תקין");
+          }
+        };
+        reader.readAsText(file);
+      });
+
+      document.getElementById("clearLogsBtn").addEventListener("click", () => {
+        if (!confirm("למחוק את כל היסטוריית האימונים המקומית?")) return;
+        state.logs = [];
+        saveState();
+        renderHeader();
+        renderLogsTable();
+      });
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function renderAll() {
+        renderHeader();
+        renderModeButtons();
+        renderWorkouts();
+        renderSnack();
+        renderLevelUpTest();
+        renderPlacementAndTraffic();
+        renderLogsTable();
+      }
+
+      renderAll();
+      updateTimerUI();
+    })();
+  </script>
+</body>
+</html>
