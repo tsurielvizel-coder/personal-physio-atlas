@@ -254,12 +254,12 @@
     coreList.innerHTML = "";
     const ci = st.coreIntegration || {};
     const coreLabels = [
-      ["בירד-דוג", ci.birdDog],
-      ["דד-באג (Dead Bug)", ci.deadBug],
-      ["פלאנק", ci.plank],
-      ["הרמות רגליים בשכיבה (ידיים מתחת לטוסיק)", ci.lyingLegRaises],
-      ["הרמות אגן על הצד / פלאנק צידי", ci.sideHipRaises],
-      ["מיני-קוברה", ci.cobra]
+      ["1. סופרמן (בירד-דוג)", ci.birdDog],
+      ["2. בטן סטטית (פלאנק)", ci.plank],
+      ["3. מיני-קוברה", ci.cobra],
+      ["4. דד-באג (Dead Bug)", ci.deadBug],
+      ["5. פלאנק צידי (אחד לכל צד)", ci.sideHipRaises],
+      ["6. הרמות רגליים בשכיבה (ידיים מתחת לטוסיק)", ci.lyingLegRaises]
     ];
     coreLabels.forEach(([k, v]) => {
       if (!v) return;
@@ -543,7 +543,7 @@
       nextDay: "ירוק",
       energy: 4,
       exercises: baseList.map((e) => e.name),
-      notes: "ביצוע שישיית הפיזיותרפיה הרגילה (Bird-Dog, Dead Bug, פלאנק, קוברה, הרמות רגליים, הרמות אגן)"
+      notes: "ביצוע שישיית הפיזיותרפיה הרגילה (סופרמן, בטן סטטית, קוברה, דד-באג, פלאנק צידי, הרמת רגליים)"
     });
     saveState();
     renderAll();
