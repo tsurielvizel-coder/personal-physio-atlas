@@ -1,6 +1,6 @@
 // Auto-generated from data/stages.json
 window.ATLAS_STAGES_DATA = {
-  "version": "3.1.0",
+  "version": "3.2.0",
   "title": "תכנית אטלס-פיזיו: 10 שלבים לגב ברזל, קליסתניקס מתקדם ומילואים",
   "baselinePhysio": [
     {
@@ -203,7 +203,7 @@ window.ATLAS_STAGES_DATA = {
               "name": "שכיבות סמיכה יהלום (Diamond Push-Ups)",
               "setsReps": "2 × 12-15",
               "cue": "גוף קשיח, ישבן אסוף — מתאים לרמת 40 שכיבות סמיכה שלך!",
-              "anim": "pushup",
+              "anim": "diamond_pushup",
               "durationSec": 45
             },
             {
@@ -226,7 +226,7 @@ window.ATLAS_STAGES_DATA = {
               "name": "שכיבות סמיכה יהלום (טמפו איטי 2 שנ' ירידה)",
               "setsReps": "3 × 12-15",
               "cue": "שמירת קו ישר מעורף לעקבים",
-              "anim": "pushup",
+              "anim": "diamond_pushup",
               "durationSec": 45
             },
             {
@@ -373,7 +373,7 @@ window.ATLAS_STAGES_DATA = {
               "name": "שכיבות סמיכה בשיפוע שלילי (רגליים על ספה/מיטה)",
               "setsReps": "2 × 12-15",
               "cue": "בטן אסופה, ישבן נעול לשמירת מותן ישרה",
-              "anim": "pushup",
+              "anim": "decline_pushup",
               "durationSec": 45
             }
           ],
@@ -389,7 +389,7 @@ window.ATLAS_STAGES_DATA = {
               "name": "שכיבות סמיכה בשיפוע שלילי (רגליים על ספה/מיטה)",
               "setsReps": "3 × 15",
               "cue": "ירידה עד קרוב לרצפה בשליטה",
-              "anim": "pushup",
+              "anim": "decline_pushup",
               "durationSec": 45
             },
             {
@@ -840,7 +840,7 @@ window.ATLAS_STAGES_DATA = {
               "name": "Pseudo-Planche Push-Ups (ידיים ליד המותניים, כתפיים קדימה)",
               "setsReps": "2 × 8-10",
               "cue": "משקל נשען קדימה מעל שורש כף היד, גוף נעול",
-              "anim": "pushup",
+              "anim": "pseudo_planche",
               "durationSec": 45
             }
           ],
@@ -856,7 +856,7 @@ window.ATLAS_STAGES_DATA = {
               "name": "Pseudo-Planche Push-Ups",
               "setsReps": "3 × 10",
               "cue": "קו גוף ישר, בלי שקיעה בכתפיים",
-              "anim": "pushup",
+              "anim": "pseudo_planche",
               "durationSec": 45
             },
             {
@@ -1104,7 +1104,7 @@ window.ATLAS_STAGES_DATA = {
               "name": "Deep Pseudo-Planche Push-Ups",
               "setsReps": "3 × 10",
               "cue": "גב נעול, הישענות חזקה קדימה",
-              "anim": "pushup",
+              "anim": "pseudo_planche",
               "durationSec": 40
             }
           ]
@@ -1307,7 +1307,7 @@ window.ATLAS_STAGES_DATA = {
               "name": "One-Arm Incline Push-Ups (שכיבת סמיכה ביד אחת על ספה/שולחן)",
               "setsReps": "2 × 6/צד",
               "cue": "פיסוק רחב ברגליים, יד חופשית מאחורי הגב — 0 פיתול במותן!",
-              "anim": "incline_pushup",
+              "anim": "one_arm_incline",
               "durationSec": 45
             }
           ],
@@ -1323,14 +1323,14 @@ window.ATLAS_STAGES_DATA = {
               "name": "One-Arm Incline Push-Ups (על ספה)",
               "setsReps": "3 × 6-8/צד",
               "cue": "מורידים גובה ספה/מדרגה משבוע לשבוע",
-              "anim": "incline_pushup",
+              "anim": "one_arm_incline",
               "durationSec": 45
             },
             {
               "name": "Deep Pseudo-Planche Push-Ups",
               "setsReps": "3 × 8",
               "cue": "שליטה מוחלטת בכתפיים ובלורדוזיס",
-              "anim": "pushup",
+              "anim": "pseudo_planche",
               "durationSec": 45
             }
           ]

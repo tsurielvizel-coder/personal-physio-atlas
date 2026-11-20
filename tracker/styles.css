@@ -457,13 +457,13 @@ select:focus, input:focus, textarea:focus {
 /* Exercise Card with Live Human Animation */
 .exercise-card {
   display: grid;
-  grid-template-columns: 155px 1fr;
-  gap: 12px;
-  align-items: center;
+  grid-template-columns: 195px 1fr;
+  gap: 14px;
+  align-items: start;
   background: var(--bg-deep);
   border: 1px solid #223252;
   border-radius: 11px;
-  padding: 10px 12px;
+  padding: 12px 14px;
   margin-bottom: 10px;
   transition: border-color 0.2s ease, background 0.2s ease;
 }
@@ -477,13 +477,112 @@ select:focus, input:focus, textarea:focus {
 
 .anim-thumb {
   width: 100%;
-  height: 112px;
+  height: 136px;
   background: radial-gradient(circle at center, #14223d 0%, #080e1c 100%);
   border: 1px solid #263859;
   border-radius: 9px;
   overflow: hidden;
   cursor: pointer;
   position: relative;
+}
+
+.ex-name-wrap {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.new-ex-pill {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(245, 158, 11, 0.16);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.guide-drawer {
+  grid-column: 1 / -1;
+  display: none;
+  margin-top: 4px;
+  padding: 12px 14px;
+  background: rgba(11, 20, 38, 0.92);
+  border: 1px solid #2c436e;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.guide-drawer.open {
+  display: block;
+}
+
+.guide-head-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.guide-muscles {
+  color: #7dd3fc;
+  font-weight: 600;
+  font-size: 0.84rem;
+}
+
+.guide-block {
+  margin-bottom: 8px;
+}
+
+.guide-block strong {
+  color: #e2e8f0;
+}
+
+.guide-steps {
+  margin: 4px 0 10px;
+  padding-inline-start: 20px;
+  color: #cbd5e1;
+}
+
+.guide-steps li {
+  margin-bottom: 4px;
+}
+
+.guide-feedback-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.guide-feel {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 0.83rem;
+}
+
+.guide-mistake {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.32);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 0.83rem;
+}
+
+.guide-yt-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
 }
 
 .anim-thumb:hover { border-color: var(--accent); }
@@ -709,7 +808,7 @@ label.field {
 
 .coach-stage-canvas {
   width: 100%;
-  height: 300px;
+  height: 340px;
   background: radial-gradient(circle at center, #17274a 0%, #070c19 100%);
   border: 1px solid #2b416b;
   border-radius: 14px;
@@ -760,6 +859,17 @@ label.field {
   padding: 10px 12px;
   border-radius: 10px;
   font-size: 0.92rem;
+}
+
+.coach-guide-box {
+  background: rgba(11, 20, 38, 0.85);
+  border: 1px solid #263859;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  max-height: 220px;
+  overflow-y: auto;
 }
 
 .coach-controls {
@@ -826,7 +936,7 @@ label.field {
   }
   .tabs::-webkit-scrollbar { display: none; }
   .exercise-card { grid-template-columns: 1fr; gap: 8px; padding: 10px; }
-  .anim-thumb { height: 145px; }
+  .anim-thumb { height: 175px; }
   .ex-actions .btn { flex: 1; min-height: 42px; }
   .coach-modal { padding: 0; }
   .coach-dialog {
@@ -836,7 +946,9 @@ label.field {
     border: 0;
     padding: 12px 12px 18px;
   }
-  .coach-stage-canvas { height: 225px; }
+  .coach-stage-canvas { height: 245px; }
+  .coach-guide-box { max-height: 170px; }
+  .guide-drawer { padding: 10px; }
   .coach-timer-big { font-size: 2.8rem; }
   .coach-primary-footer {
     position: sticky;

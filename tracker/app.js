@@ -8,6 +8,7 @@
   }
 
   const Animator = window.AtlasAnimator;
+  const Guides = window.AtlasGuides;
   const Music = window.AtlasMusic;
   const Sync = window.AtlasSync;
 
@@ -170,8 +171,32 @@
     });
   }
 
+  function buildGuideHtml(ex, guide) {
+    if (!guide) {
+      return "<div class='guide-block'><strong>דגש:</strong> " + escapeHtml(ex.cue || "") + "</div>";
+    }
+    const ytUrl = ("https://www.youtube.com/results?search_query=" + encodeURIComponent(guide.ytQuery || ex.name)).replace(/'/g, "%27");
+    const stepsHtml = (guide.steps || [])
+      .map((s) => "<li>" + escapeHtml(s) + "</li>")
+      .join("");
+    return (
+      "<div class='guide-head-row'>" +
+        "<span class='guide-muscles'>🎯 עובד על: " + escapeHtml(guide.muscles || "") + "</span>" +
+        (guide.isNew ? "<span class='new-ex-pill'>✨ תרגיל חדש</span>" : "") +
+      "</div>" +
+      "<div class='guide-block'><strong>עמדת מוצא:</strong> " + escapeHtml(guide.setup || "") + "</div>" +
+      "<div class='guide-block'><strong>שלבי ביצוע:</strong><ol class='guide-steps'>" + stepsHtml + "</ol></div>" +
+      "<div class='guide-feedback-grid'>" +
+        "<div class='guide-feel'><strong>✅ איפה מרגישים:</strong> " + escapeHtml(guide.feel || "") + "</div>" +
+        "<div class='guide-mistake'><strong>⚠️ טעות נפוצה:</strong> " + escapeHtml(guide.mistakes || "") + "</div>" +
+      "</div>" +
+      "<a class='btn small guide-yt-btn' href='" + escapeHtml(ytUrl) + "' target='_blank' rel='noopener noreferrer'>🎥 הדגמת וידאו אמיתי ביוטיוב</a>"
+    );
+  }
+
   function createExerciseCard(ex, uniqueKey, onSingleCoach) {
     const done = isDoneToday(uniqueKey);
+    const guide = Guides ? Guides.get(ex.anim || "plank") : null;
     const card = document.createElement("div");
     card.className = "exercise-card" + (done ? " done-today" : "");
 
@@ -182,8 +207,13 @@
 
     const body = document.createElement("div");
     body.className = "ex-body";
+    const newBadgeHtml = guide && guide.isNew ? "<span class='new-ex-pill'>✨ תרגיל חדש</span>" : "";
+    const musclesLineHtml = guide && guide.muscles
+      ? "<div class='guide-muscles' style='margin-bottom:4px;'>🎯 " + escapeHtml(guide.muscles) + "</div>"
+      : "";
     body.innerHTML =
-      "<div class='ex-top'><span>" + escapeHtml(ex.name) + "</span><span class='ex-dose'>" + escapeHtml(ex.setsReps) + "</span></div>" +
+      "<div class='ex-top'><span class='ex-name-wrap'>" + escapeHtml(ex.name) + newBadgeHtml + "</span><span class='ex-dose'>" + escapeHtml(ex.setsReps) + "</span></div>" +
+      musclesLineHtml +
       "<div class='ex-cue'>" + escapeHtml(ex.cue) + "</div>";
 
     const actions = document.createElement("div");
@@ -207,12 +237,30 @@
     zoomBtn.textContent = "👁️ הדגמה וטיימר";
     zoomBtn.addEventListener("click", () => onSingleCoach(ex, uniqueKey));
 
+    const guideBtn = document.createElement("button");
+    guideBtn.type = "button";
+    guideBtn.className = "btn small";
+    guideBtn.setAttribute("aria-expanded", "false");
+    guideBtn.textContent = "📖 איך עושים? (הסבר מלא)";
+
+    const drawer = document.createElement("div");
+    drawer.className = "guide-drawer";
+    drawer.innerHTML = buildGuideHtml(ex, guide);
+
+    guideBtn.addEventListener("click", () => {
+      const open = drawer.classList.toggle("open");
+      guideBtn.setAttribute("aria-expanded", open ? "true" : "false");
+      guideBtn.textContent = open ? "🔼 הסתר הסבר" : "📖 איך עושים? (הסבר מלא)";
+    });
+
     actions.appendChild(doneBtn);
     actions.appendChild(zoomBtn);
+    actions.appendChild(guideBtn);
     body.appendChild(actions);
 
     card.appendChild(thumb);
     card.appendChild(body);
+    card.appendChild(drawer);
 
     if (Animator) Animator.mount(thumb, ex.anim || "plank", { compact: true });
     return card;
@@ -836,6 +884,10 @@
     document.getElementById("coachExerciseName").textContent = ex.name;
     document.getElementById("coachExerciseDose").textContent = ex.setsReps;
     document.getElementById("coachCueText").textContent = ex.cue;
+    const guideEl = document.getElementById("coachGuideBox");
+    if (guideEl) {
+      guideEl.innerHTML = buildGuideHtml(ex, Guides ? Guides.get(ex.anim || "plank") : null);
+    }
     coachTimerSec = Number(ex.durationSec) || 40;
     document.getElementById("coachTimerDisplay").textContent = formatTime(coachTimerSec);
 
