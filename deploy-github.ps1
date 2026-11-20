@@ -1,4 +1,4 @@
-﻿# סקריפט העלאה אוטומטי ל-GitHub Pages (גישה מהטלפון ומהמחשב)
+# סקריפט העלאה אוטומטי ל-GitHub Pages (גישה מהטלפון ומהמחשב)
 $ErrorActionPreference = "Stop"
 
 $repoDir = Split-Path -Parent $MyInvocation.MyCommand.Path
