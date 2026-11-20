@@ -1,5 +1,5 @@
 # פרופיל מתאמן - מאגר פיזיותרפיה, קליסתניקס ומוכנות למילואים
-version: "1.0.0"
+version: "2.0.0"
 updated_at: "2026-11-20"
 
 trainee:
@@ -10,20 +10,22 @@ trainee:
   occupation: "sedentary_desk_work"
   goals:
     - "מניעת כאבי גב תחתון והגנה בעומסי יומיום וישיבה ממושכת"
-    - "איזון אסימטריה קלה בעמוד השדרה (עקמת קלה)"
-    - "התאוששות מנשיאת אקדח בהליכה ממושכת ומניעת הישנות"
-    - "הכנת הגב והגוף לשירות מילואים בעוד מספר חודשים"
+    - "שליטה באגן ואיזון היפר-לורדוזיס מותנית קלה ממש (תסמונת צולבת תחתונה)"
+    - "מוכנות וחיסון הגב והשרירים לשירות מילואים בעוד כמה חודשים"
+    - "שמירת הגב חסין גם אם בעתיד תהיה חזרה לנשיאת אקדח בהליכה ממושכת"
     - "הגברת חיוניות, ערנות ואנרגיה יומית"
 
 clinical_context:
-  scoliosis: "mild_adult"
-  pain_pattern: "pain-free when consistent with baseline routine + swimming; recent flare-up triggered by prolonged walking while carrying a handgun"
+  posture_note: "mild_lumbar_hyperlordosis"
+  handgun_carry_status: "currently_paused_may_resume_later"
+  pain_pattern: "pain-free when consistent with baseline routine + swimming; previous flare-up occurred during prolonged walking with a handgun"
   red_flags_present: false
   spine_strategy:
-    - "McGill Big 3 core stiffness & endurance (neutral spine)"
-    - "Unilateral symmetry monitoring (<=15% gap early, <=10% advanced)"
-    - "Anti-lateral flexion & anti-rotation conditioning (Suitcase/Waiter carries)"
-    - "Safe replacement of supine double straight-leg raises with Dead Bug / Hollow progressions"
+    - "Posterior pelvic tilt motor control (glutes + hamstrings + anterior core endurance)"
+    - "Lengthening tight hip flexors from prolonged sitting"
+    - "Gentle mini-cobra thoracic lengthening without over-crushing lumbar segments"
+    - "Preserve user's preferred Lying Leg Raises (hands under glutes) with posterior-pelvic lock cue"
+    - "Anti-lateral flexion & anti-rotation endurance (Side Plank + Suitcase Carry) for Miluim & future carry resilience"
 
 current_baseline_routine:
   swimming:
@@ -36,19 +38,19 @@ current_baseline_routine:
     exercises:
       - name: "סופרמן בעמידת 6 (Bird-Dog)"
         current_dose: "12 חזרות לכל יד/רגל נגדית"
-        clinical_note: "מצוין - לשדרג לעצירת 3-5 שניות בקצה עם אגרוף קמוץ ועמוד שדרה ניטרלי"
+        clinical_note: "מצוין - מומלץ לעצור 3-5 שנ' בקצה עם מותן ניטרלית"
       - name: "בטן סטטית (Plank)"
         current_dose: "35 שניות"
-        clinical_note: "טוב מאוד - להקפיד על כיווץ ישבן ולדחוף את המרפקים לכיוון הבהונות (RKC)"
-      - name: "קוברה (Cobra / Prone Extension)"
+        clinical_note: "מעולה - לשמור על כיווץ ישבן (סיבוב אגן קל לאחור) לנייטרול לורדוזיס"
+      - name: "קוברה עדינה (Mini-Cobra)"
         current_dose: "10 שניות"
-        clinical_note: "להשאיר כהרפיה עדינה בלבד ללא לחץ חד בגב תחתון"
+        clinical_note: "להשאיר כהרפיה והארכה עדינה בלבד ללא הקשתה חדה במותן"
       - name: "הרמות רגליים בשכיבה על הגב עם ידיים מתחת לטוסיק"
         current_dose: "12 חזרות"
-        clinical_note: "מוחלף בהדרגה ל-Dead Bug / שליטה בחד-רגלי למניעת כוח גזירה קדמי מהפסואס (McGill)"
+        clinical_note: "נשאר קבוע בתכנית לפי רצון המתאמן; הידיים מסייעות לסיבוב אגן לאחור - שומרים על מותן צמודה לידיים"
       - name: "הרמות אגן על הצד (Side Hip Raises)"
         current_dose: "12 חזרות לכל צד"
-        clinical_note: "לשדרג לפלאנק צידי מלא/דינמי עם ספירה זהה לשמאל ולימין (נשק נגד אקדח ועקמת)"
+        clinical_note: "מצוין ליציבת אגן וסימטריה, מתפתח בהמשך לפלאנק צידי מלא"
 
 time_budget_addition:
   busy_week_mode: "+30 min/week (3 x 10 min stacked after core routine, or 2 x 15 min)"
