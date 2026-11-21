@@ -12,6 +12,11 @@
   };
   let pushTimer = null;
   let isSyncing = false;
+  let pendingPush = false;
+  let lastSyncAt = 0;
+  let listenersBound = false;
+  const AUTO_PULL_MIN_GAP_MS = 5000;
+  const AUTO_PULL_INTERVAL_MS = 60000;
 
   function loadCreds() {
     try {
@@ -144,6 +149,7 @@
         });
         creds.gistId = created.id;
         saveCreds();
+        lastSyncAt = Date.now();
         setStatus("ok", "☁️ מסונכרן (חדש נוצר)");
         refreshModalUI();
         if (!silent && callbacks.showToast) callbacks.showToast("☁️ נוצר סנכרון ענן פרטי בהצלחה!");
@@ -157,13 +163,14 @@
         remoteState = JSON.parse(fileObj.content);
       }
 
+      const localStr = JSON.stringify(localState, null, 2);
       const merged = mergeStates(localState, remoteState);
-      if (callbacks.applyMergedState) {
+      const mergedStr = JSON.stringify(merged, null, 2);
+      if (mergedStr !== localStr && callbacks.applyMergedState) {
         callbacks.applyMergedState(merged);
       }
 
       // Push merged state back if different from remote
-      const mergedStr = JSON.stringify(merged, null, 2);
       const remoteStr = remoteState ? JSON.stringify(remoteState, null, 2) : "";
       if (mergedStr !== remoteStr) {
         await apiFetch("https://api.github.com/gists/" + creds.gistId, {
@@ -174,6 +181,7 @@
         });
       }
 
+      lastSyncAt = Date.now();
       const timeStr = new Date().toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" });
       setStatus("ok", "☁️ מסונכרן (" + timeStr + ")");
       refreshModalUI();
@@ -183,15 +191,29 @@
       if (!silent && callbacks.showToast) callbacks.showToast("❌ שגיאת סנכרון: בדוק טוקן או חיבור אינטרנט");
     } finally {
       isSyncing = false;
+      if (pendingPush && hasCreds()) {
+        pendingPush = false;
+        schedulePush();
+      }
     }
   }
 
   function schedulePush() {
     if (!hasCreds()) return;
+    if (isSyncing) {
+      pendingPush = true;
+      return;
+    }
     clearTimeout(pushTimer);
     pushTimer = setTimeout(() => {
       syncNow(true);
     }, 1200);
+  }
+
+  function autoPull() {
+    if (!hasCreds() || isSyncing || document.hidden) return;
+    if (Date.now() - lastSyncAt < AUTO_PULL_MIN_GAP_MS) return;
+    syncNow(true);
   }
 
   function checkPairingHash() {
@@ -308,6 +330,18 @@
       syncNow(!pairedFromUrl);
     } else {
       setStatus("off", "☁️ סנכרון טלפון-מחשב");
+    }
+
+    if (!listenersBound) {
+      listenersBound = true;
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) autoPull();
+      });
+      window.addEventListener("focus", autoPull);
+      window.addEventListener("online", () => {
+        if (hasCreds()) syncNow(true);
+      });
+      setInterval(autoPull, AUTO_PULL_INTERVAL_MS);
     }
   }
 
