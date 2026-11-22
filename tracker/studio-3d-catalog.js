@@ -105,11 +105,11 @@
 
   const BASE_FOREARM_PLANK = mergeBones(BASE_PRONE_PLANK, {
     "mixamorig:Hips": [1.46, 0, 0],
-    "mixamorig:LeftArm": [0.15, -1.48, 0.05],
-    "mixamorig:LeftForeArm": [0, -0.15, -1.42],
+    "mixamorig:LeftArm": [0.04, -1.50, 0.08],
+    "mixamorig:LeftForeArm": [0, 0.08, 1.48],
     "mixamorig:LeftHand": [0, 0, 0],
-    "mixamorig:RightArm": [0.15, 1.48, -0.05],
-    "mixamorig:RightForeArm": [0, 0.15, 1.42],
+    "mixamorig:RightArm": [0.04, 1.50, -0.08],
+    "mixamorig:RightForeArm": [0, -0.08, -1.48],
     "mixamorig:RightHand": [0, 0, 0]
   });
 
@@ -232,10 +232,10 @@
       cameras: CAM_FLOOR,
       defaultAngle: "side",
       keyframes: loopKF(
-        [0, 0.30, -0.08],
+        [0, 0.34, -0.08],
         BASE_FOREARM_PLANK,
-        [0, 0.32, -0.08],
-        mergeBones(BASE_FOREARM_PLANK, { "mixamorig:Spine": [0.06, 0, 0], "mixamorig:Spine1": [0.05, 0, 0] }),
+        [0, 0.355, -0.08],
+        mergeBones(BASE_FOREARM_PLANK, { "mixamorig:Spine": [0.05, 0, 0], "mixamorig:Spine1": [0.04, 0, 0] }),
         false
       )
     },
@@ -282,10 +282,10 @@
       cameras: CAM_FLOOR,
       defaultAngle: "side",
       keyframes: loopKF(
-        [0, 0.30, 0.04],
+        [0, 0.34, 0.04],
         BASE_FOREARM_PLANK,
-        [0, 0.28, -0.16],
-        mergeBones(BASE_FOREARM_PLANK, { "mixamorig:LeftArm": [0.15, -1.78, 0.05], "mixamorig:RightArm": [0.15, 1.78, -0.05] }),
+        [0, 0.32, -0.14],
+        mergeBones(BASE_FOREARM_PLANK, { "mixamorig:LeftArm": [0.04, -1.78, 0.08], "mixamorig:RightArm": [0.04, 1.78, -0.08] }),
         false
       )
     },
@@ -404,7 +404,7 @@
         [0, 0.44, 0],
         mergeBones(BASE_SIDE_PLANK, {
           "mixamorig:LeftArm": [0, 0, 0.10],
-          "mixamorig:LeftUpLeg": [0, 0, -0.52]
+          "mixamorig:LeftUpLeg": [0, 0, 0.52]
         }),
         true
       )
@@ -701,19 +701,19 @@
       cameras: CAM_FLOOR,
       defaultAngle: "angle45",
       keyframes: loopKF(
-        [0, 0.54, -0.10],
+        [0, 0.56, -0.16],
         mergeBones(BASE_PRONE_PLANK, {
           "mixamorig:Hips": [0.96, 0, 0],
-          "mixamorig:LeftArm": [0, 0.15, -1.35],
-          "mixamorig:LeftForeArm": [0, 1.2, 0],
+          "mixamorig:LeftArm": [0, 0.35, -1.42],
+          "mixamorig:LeftForeArm": [0, -1.45, 0],
           "mixamorig:LeftUpLeg": [0.02, 0, -0.18],
           "mixamorig:RightUpLeg": [0.02, 0, 0.18]
         }),
-        [0, 0.44, 0.02],
+        [0, 0.46, -0.04],
         mergeBones(BASE_PRONE_PLANK, {
-          "mixamorig:Hips": [1.14, 0, 0],
-          "mixamorig:LeftArm": [0, 0.15, -1.35],
-          "mixamorig:LeftForeArm": [0, 1.2, 0],
+          "mixamorig:Hips": [1.12, 0, 0],
+          "mixamorig:LeftArm": [0, 0.35, -1.42],
+          "mixamorig:LeftForeArm": [0, -1.45, 0],
           "mixamorig:RightArm": [0.15, 0.72, 0.62],
           "mixamorig:RightForeArm": [0, 1.48, 0],
           "mixamorig:LeftUpLeg": [0.02, 0, -0.18],
@@ -913,19 +913,19 @@
       cameras: CAM_FLOOR,
       defaultAngle: "side",
       keyframes: loopKF(
-        [0, 0.24, 0.20],
+        [0, 0.20, 0.12],
         mergeBones(BASE_SUPINE, {
           "mixamorig:Hips": [-1.36, 0, 0],
           "mixamorig:LeftArm": [0, -1.48, 0],
           "mixamorig:RightArm": [0, 1.48, 0]
         }),
-        [0, 0.44, 0.20],
+        [0, 0.38, 0.12],
         mergeBones(BASE_SUPINE, {
-          "mixamorig:Hips": [-1.18, 0, 0],
-          "mixamorig:LeftArm": [0, -0.55, -0.70],
-          "mixamorig:LeftForeArm": [0, -1.55, 0],
-          "mixamorig:RightArm": [0, 0.55, 0.70],
-          "mixamorig:RightForeArm": [0, 1.55, 0]
+          "mixamorig:Hips": [-1.22, 0, 0],
+          "mixamorig:LeftArm": [0, -0.58, -0.68],
+          "mixamorig:LeftForeArm": [0, -1.52, 0],
+          "mixamorig:RightArm": [0, 0.58, 0.68],
+          "mixamorig:RightForeArm": [0, 1.52, 0]
         }),
         true
       )
@@ -1343,20 +1343,20 @@
         [0, 0.48, -0.45],
         mergeBones(BASE_PRONE_PLANK, {
           "mixamorig:Hips": [1.57, 0, 0],
-          "mixamorig:LeftArm": [0, -0.85, -0.65],
-          "mixamorig:LeftForeArm": [0, -1.65, 0],
-          "mixamorig:RightArm": [0, 0.85, 0.65],
-          "mixamorig:RightForeArm": [0, 1.65, 0],
+          "mixamorig:LeftArm": [0, -1.15, -0.55],
+          "mixamorig:LeftForeArm": [0, 0, 1.75],
+          "mixamorig:RightArm": [0, 1.15, 0.55],
+          "mixamorig:RightForeArm": [0, 0, -1.75],
           "mixamorig:LeftFoot": [0.35, 0, 0],
           "mixamorig:RightFoot": [0.35, 0, 0]
         }),
         [0, 0.49, -0.45],
         mergeBones(BASE_PRONE_PLANK, {
           "mixamorig:Hips": [1.55, 0, 0],
-          "mixamorig:LeftArm": [0, -0.85, -0.65],
-          "mixamorig:LeftForeArm": [0, -1.65, 0],
-          "mixamorig:RightArm": [0, 0.85, 0.65],
-          "mixamorig:RightForeArm": [0, 1.65, 0],
+          "mixamorig:LeftArm": [0, -1.15, -0.55],
+          "mixamorig:LeftForeArm": [0, 0, 1.75],
+          "mixamorig:RightArm": [0, 1.15, 0.55],
+          "mixamorig:RightForeArm": [0, 0, -1.75],
           "mixamorig:LeftFoot": [0.35, 0, 0],
           "mixamorig:RightFoot": [0.35, 0, 0]
         }),
@@ -1444,21 +1444,21 @@
       cameras: CAM_HIGH,
       defaultAngle: "angle45",
       keyframes: loopKF(
-        [0, 0.64, 0],
+        [0, 0.68, 0],
         mergeBones(BASE_STAND, {
-          "mixamorig:Hips": [0.14, 0, 0],
-          "mixamorig:LeftArm": [0, 0, -1.32],
-          "mixamorig:RightArm": [0, 0, 1.32],
+          "mixamorig:Hips": [0.12, 0, 0],
+          "mixamorig:LeftArm": [0, 0, -1.28],
+          "mixamorig:RightArm": [0, 0, 1.28],
           "mixamorig:LeftLeg": [1.35, 0, 0],
           "mixamorig:RightLeg": [1.35, 0, 0]
         }),
-        [0, 0.40, 0],
+        [0, 0.52, 0],
         mergeBones(BASE_STAND, {
-          "mixamorig:Hips": [0.22, 0, 0],
-          "mixamorig:LeftArm": [0.20, 0.65, -0.72],
-          "mixamorig:LeftForeArm": [0, -1.55, 0],
-          "mixamorig:RightArm": [0.20, -0.65, 0.72],
-          "mixamorig:RightForeArm": [0, 1.55, 0],
+          "mixamorig:Hips": [0.18, 0, 0],
+          "mixamorig:LeftArm": [0.16, 0.55, -0.68],
+          "mixamorig:LeftForeArm": [0, -1.35, 0],
+          "mixamorig:RightArm": [0.16, -0.55, 0.68],
+          "mixamorig:RightForeArm": [0, 1.35, 0],
           "mixamorig:LeftLeg": [1.45, 0, 0],
           "mixamorig:RightLeg": [1.45, 0, 0]
         }),
@@ -1481,7 +1481,7 @@
         "3/3 הורד לאט בשליטה מלאה ועצור לרגע לפני החזרה הבאה."
       ],
       cameras: CAM_HIGH,
-      defaultAngle: "side",
+      defaultAngle: "angle45",
       keyframes: loopKF(
         [0, 1.14, 0.04],
         mergeBones(BASE_STAND, {

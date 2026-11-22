@@ -803,12 +803,12 @@
       scene.add(mat);
       const woodMat = new THREE.MeshStandardMaterial({ color: 0x26354d, roughness: 0.75, metalness: 0.08 });
       const top = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.05, 0.75), woodMat);
-      top.position.set(0, 0.78, 0.25);
+      top.position.set(0, 0.90, 0.18);
       top.castShadow = true;
       scene.add(top);
-      [[-0.56, -0.06], [0.56, -0.06], [-0.56, 0.56], [0.56, 0.56]].forEach(([lx, lz]) => {
-        const leg = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.76, 0.055), woodMat);
-        leg.position.set(lx, 0.38, lz);
+      [[-0.56, -0.14], [0.56, -0.14], [-0.56, 0.50], [0.56, 0.50]].forEach(([lx, lz]) => {
+        const leg = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.88, 0.055), woodMat);
+        leg.position.set(lx, 0.44, lz);
         scene.add(leg);
       });
     } else if (propType === "chairs_dips") {

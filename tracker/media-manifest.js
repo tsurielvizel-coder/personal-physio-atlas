@@ -476,10 +476,10 @@ window.ATLAS_MEDIA_MANIFEST = {
   "hanging_raise": {
     "type": "3d",
     "poster": "./assets/exercises/hanging_raise.poster.webp",
-    "defaultAngle": "side",
+    "defaultAngle": "angle45",
     "angles": [
-      "side",
       "angle45",
+      "side",
       "front",
       "top"
     ]
