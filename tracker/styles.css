@@ -808,12 +808,252 @@ label.field {
 
 .coach-stage-canvas {
   width: 100%;
-  height: 340px;
-  background: radial-gradient(circle at center, #17274a 0%, #070c19 100%);
+  height: 368px;
+  background: radial-gradient(circle at center, #131f3a 0%, #070c19 100%);
   border: 1px solid #2b416b;
   border-radius: 14px;
   overflow: hidden;
   position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 3D Studio Calm Poster Cards & Live Interactive Stage */
+.studio-card-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #09101d;
+  overflow: hidden;
+}
+
+.studio-card-poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.studio-badge-3d {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #7dd3fc;
+  background: rgba(9, 16, 29, 0.84);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  padding: 2px 7px;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.studio-inline-btn {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  cursor: pointer;
+  border: 1px solid rgba(56, 189, 248, 0.55);
+  background: rgba(9, 16, 29, 0.86);
+  color: #e0f2fe;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  transition: background 0.16s ease, border-color 0.16s ease;
+}
+
+.studio-inline-btn:hover {
+  background: rgba(2, 132, 199, 0.9);
+  border-color: #7dd3fc;
+}
+
+.studio-live-wrap {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #09101d;
+}
+
+.studio-stage-box {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.studio-canvas-host {
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+}
+
+.studio-canvas-host:active {
+  cursor: grabbing;
+}
+
+.studio-angle-bar {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.studio-live-wrap.is-inline-card .studio-angle-bar {
+  top: 4px;
+  right: 4px;
+  gap: 3px;
+}
+
+.studio-angle-btn {
+  cursor: pointer;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(9, 16, 29, 0.78);
+  color: #cbd5e1;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 7px;
+  backdrop-filter: blur(4px);
+  transition: all 0.14s ease;
+}
+
+.studio-live-wrap.is-inline-card .studio-angle-btn {
+  font-size: 0.64rem;
+  padding: 2px 5px;
+}
+
+.studio-angle-btn:hover,
+.studio-angle-btn.active {
+  background: rgba(2, 132, 199, 0.88);
+  border-color: #7dd3fc;
+  color: #fff;
+}
+
+.studio-inline-close {
+  border-color: rgba(239, 68, 68, 0.55);
+  color: #fca5a5;
+}
+
+.studio-inline-close:hover {
+  background: rgba(220, 38, 38, 0.85);
+  border-color: #fca5a5;
+  color: #fff;
+}
+
+.studio-orbit-hint {
+  position: absolute;
+  bottom: 7px;
+  left: 8px;
+  z-index: 4;
+  font-size: 0.7rem;
+  color: rgba(203, 213, 225, 0.78);
+  background: rgba(9, 16, 29, 0.68);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  padding: 2px 8px;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.studio-cue-strip {
+  flex: 0 0 auto;
+  background: #0d1629;
+  border-top: 1px solid #223456;
+  padding: 8px 12px 6px;
+}
+
+.studio-cue-text {
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  line-height: 1.4;
+  min-height: 2.2em;
+}
+
+.studio-cue-progress {
+  height: 3px;
+  background: #17233d;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+
+.studio-cue-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #38bdf8, #22c55e);
+  transition: width 0.2s linear;
+}
+
+/* Floating Compact Music Bubble */
+.music-float-bubble {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 260;
+  display: none;
+  align-items: center;
+  gap: 6px;
+  max-width: min(310px, calc(100vw - 24px));
+  background: rgba(11, 18, 36, 0.94);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(56, 189, 248, 0.5);
+  border-radius: 999px;
+  padding: 6px 10px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+}
+
+.music-float-bubble.visible {
+  display: inline-flex;
+}
+
+.music-float-bubble.is-playing {
+  border-color: rgba(34, 197, 94, 0.65);
+}
+
+.music-float-bubble.minimized .float-music-title,
+.music-float-bubble.minimized #floatMusicNextBtn {
+  display: none;
+}
+
+.float-music-btn {
+  cursor: pointer;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: var(--bg-elevated);
+  color: var(--text);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.float-music-btn:hover {
+  border-color: var(--accent);
+  transform: scale(1.05);
+}
+
+.float-music-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 155px;
 }
 
 .coach-timer-box {
@@ -946,7 +1186,10 @@ label.field {
     border: 0;
     padding: 12px 12px 18px;
   }
-  .coach-stage-canvas { height: 245px; }
+  .coach-stage-canvas { height: 292px; }
+  .studio-cue-text { font-size: 0.78rem; }
+  .music-float-bubble { bottom: 12px; right: 10px; }
+  .music-float-bubble.coach-open { bottom: 74px; right: 10px; }
   .coach-guide-box { max-height: 170px; }
   .guide-drawer { padding: 10px; }
   .coach-timer-big { font-size: 2.8rem; }

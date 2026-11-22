@@ -73,6 +73,7 @@
         </div>
         <div class="badges-row">
           <button class="pill accent" id="syncStatusBtn" title="חיבור סנכרון אוטומטי בין הטלפון למחשב">☁️ סנכרון טלפון-מחשב</button>
+          <button class="pill" id="offlineCacheBtn" title="שמירה חד-פעמית לאופליין בטלפון (0 תעבורת נתונים חוזרת)">📥 שמירה לאופליין</button>
           <span class="pill green" id="streakBadge">⚡ מוכן לאימון</span>
           <span class="pill accent" id="activeStageBadge">שלב נוכחי: 1 / 10</span>
           <span class="pill purple" id="totalLogsBadge">סה"כ אימונים: 0</span>
@@ -412,6 +413,7 @@
             <option value="dayC">תוספת יום ג' (שלב נוכחי)</option>
             <option value="emergency">חירום 5 דק'</option>
           </select>
+          <button class="btn small" id="coachMusicToggleBtn" title="הפעל או עצור מוזיקה במהלך האימון">🎵 נגן מוזיקה</button>
           <button class="btn small danger-outline" id="coachCloseBtn">✕ סגור</button>
         </div>
       </div>
@@ -496,9 +498,24 @@
     </div>
   </div>
 
+  <!-- Floating Compact Music Bubble (always accessible on mobile & inside Coach Mode) -->
+  <div class="music-float-bubble" id="musicFloatBubble" aria-label="שליטה מהירה במוזיקה">
+    <button type="button" class="float-music-btn" id="floatMusicPlayBtn" aria-label="נגן או עצור מוזיקה">▶️</button>
+    <span class="float-music-title" id="floatMusicTitle">ניגון מוכן</span>
+    <button type="button" class="float-music-btn" id="floatMusicNextBtn" aria-label="שיר הבא" title="שיר הבא">⏭️</button>
+    <button type="button" class="float-music-btn float-min-btn" id="floatMusicMinBtn" aria-label="מזער בועה" title="מזער לבועה">—</button>
+  </div>
+
   <div class="toast" id="toastEl"></div>
 
   <script src="./stages-data.js"></script>
+  <script src="./vendor/three.min.js"></script>
+  <script src="./vendor/GLTFLoader.js"></script>
+  <script src="./vendor/OrbitControls.js"></script>
+  <script src="./vendor/xbot-model.js"></script>
+  <script src="./media-manifest.js"></script>
+  <script src="./studio-3d.js"></script>
+  <script src="./studio-3d-catalog.js"></script>
   <script src="./animator.js"></script>
   <script src="./exercise-guides.js"></script>
   <script src="./music-player.js"></script>

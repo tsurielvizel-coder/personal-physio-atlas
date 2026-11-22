@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Atlas Studio 3D Poster Renderer</title>
+  <style>
+    html, body { margin: 0; padding: 0; background: #09101d; overflow: hidden; }
+    #stage { width: 640px; height: 400px; }
+  </style>
+</head>
+<body>
+  <div id="stage"></div>
+  <script src="../../vendor/three.min.js"></script>
+  <script src="../../vendor/GLTFLoader.js"></script>
+  <script src="../../vendor/xbot-model.js"></script>
+  <script src="../../studio-3d.js"></script>
+  <script src="../../studio-3d-catalog.js"></script>
+  <script>
+    (function () {
+      const stage = document.getElementById("stage");
+      let viewer = null;
+      let currentEx = null;
+
+      window.__initStudio = async function (exKey, angle) {
+        if (viewer && currentEx === exKey) {
+          viewer.setAngle(angle);
+          return true;
+        }
+        if (viewer) viewer.dispose();
+        currentEx = exKey;
+        viewer = window.AtlasStudio3D.createViewer(stage, exKey, {
+          width: 640,
+          height: 400,
+          pixelRatio: 1,
+          interactive: false,
+          manualRenderOnly: true,
+          preserveDrawingBuffer: true,
+          angle: angle,
+          paused: true
+        });
+        await viewer.ready;
+        return true;
+      };
+
+      window.__renderStudioFrame = function (angle, phase01) {
+        if (!viewer) throw new Error("Not initialized");
+        if (angle) viewer.setAngle(angle);
+        viewer.renderAtPhase(phase01);
+        return true;
+      };
+    })();
+  </script>
+</body>
+</html>

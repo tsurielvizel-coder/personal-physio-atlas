@@ -983,12 +983,295 @@
 
   const state = {
     instances: [],
+    studioInstances: [],
     paused: false,
     speed: 1.0,
     rafId: null,
     elapsedMs: 0,
     lastTs: null
   };
+
+  const ANGLE_LABELS = {
+    side: "צד",
+    angle45: "45°",
+    front: "חזית",
+    top: "מבט על"
+  };
+
+  const CUE_INTERVAL_MS = 7000;
+
+  function hasStudioMedia(animKey) {
+    return Boolean(
+      window.ATLAS_MEDIA_MANIFEST &&
+      window.ATLAS_MEDIA_MANIFEST[animKey] &&
+      window.AtlasStudio3D &&
+      window.AtlasStudio3D.hasExercise(animKey)
+    );
+  }
+
+  function disposeStudioInst(sInst) {
+    if (!sInst) return;
+    if (sInst.cueTimer) {
+      clearInterval(sInst.cueTimer);
+      sInst.cueTimer = null;
+    }
+    if (sInst.resizeObserver) {
+      try { sInst.resizeObserver.disconnect(); } catch (e) {}
+      sInst.resizeObserver = null;
+    }
+    if (sInst.intersectionObserver) {
+      try { sInst.intersectionObserver.disconnect(); } catch (e) {}
+      sInst.intersectionObserver = null;
+    }
+    if (sInst.viewer) {
+      try { sInst.viewer.dispose(); } catch (e) {}
+      sInst.viewer = null;
+    }
+  }
+
+  function mountStudioLive(containerEl, animKey, options, isInlineCard) {
+    const entry = window.ATLAS_MEDIA_MANIFEST[animKey];
+    const def = window.AtlasStudio3D.exercises[animKey];
+    const opts = options || {};
+    const angles = (entry && entry.angles) || ["side", "angle45", "front", "top"];
+    const defaultAngle = (entry && entry.defaultAngle) || def.defaultAngle || "side";
+
+    containerEl.innerHTML = "";
+    const wrap = document.createElement("div");
+    wrap.className = "studio-live-wrap" + (isInlineCard ? " is-inline-card" : "");
+    if (isInlineCard) {
+      wrap.addEventListener("click", (e) => e.stopPropagation());
+    }
+
+    const stageBox = document.createElement("div");
+    stageBox.className = "studio-stage-box";
+
+    const canvasHost = document.createElement("div");
+    canvasHost.className = "studio-canvas-host";
+    stageBox.appendChild(canvasHost);
+
+    // Angle preset overlay buttons
+    const angleBar = document.createElement("div");
+    angleBar.className = "studio-angle-bar";
+    const angleBtns = [];
+    angles.forEach((ang) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "studio-angle-btn" + (ang === defaultAngle ? " active" : "");
+      btn.textContent = ANGLE_LABELS[ang] || ang;
+      btn.setAttribute("data-angle", ang);
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        angleBtns.forEach((b) => b.classList.toggle("active", b === btn));
+        if (sInst.viewer) sInst.viewer.setAngle(ang);
+      });
+      angleBar.appendChild(btn);
+      angleBtns.push(btn);
+    });
+
+    if (isInlineCard) {
+      const closeBtn = document.createElement("button");
+      closeBtn.type = "button";
+      closeBtn.className = "studio-angle-btn studio-inline-close";
+      closeBtn.textContent = "✕";
+      closeBtn.title = "חזור לתמונה רגועה";
+      closeBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        unmountContainer(containerEl);
+        mountStudioPoster(containerEl, animKey, options);
+      });
+      angleBar.appendChild(closeBtn);
+    }
+    stageBox.appendChild(angleBar);
+
+    if (!isInlineCard) {
+      const hint = document.createElement("div");
+      hint.className = "studio-orbit-hint";
+      hint.textContent = "↔ ↕ גרור לסיבוב 360°";
+      stageBox.appendChild(hint);
+    }
+
+    wrap.appendChild(stageBox);
+
+    // Calm 7-second Hebrew cue bar below the 3D canvas (for Coach Mode / full view)
+    let cueTextEl = null;
+    let cueProgressFill = null;
+    const cues = (def.cues && def.cues.length) ? def.cues : [def.staticCue || def.title];
+    if (!isInlineCard) {
+      const cueStrip = document.createElement("div");
+      cueStrip.className = "studio-cue-strip";
+
+      cueTextEl = document.createElement("div");
+      cueTextEl.className = "studio-cue-text";
+      cueTextEl.textContent = state.paused ? (def.staticCue || cues[0]) : cues[0];
+
+      const progTrack = document.createElement("div");
+      progTrack.className = "studio-cue-progress";
+      cueProgressFill = document.createElement("div");
+      cueProgressFill.className = "studio-cue-progress-fill";
+      progTrack.appendChild(cueProgressFill);
+
+      cueStrip.appendChild(cueTextEl);
+      cueStrip.appendChild(progTrack);
+      wrap.appendChild(cueStrip);
+    }
+
+    containerEl.appendChild(wrap);
+
+    const rect = canvasHost.getBoundingClientRect();
+    const w = Math.max(180, Math.round(rect.width || containerEl.clientWidth || (isInlineCard ? 220 : 480)));
+    const h = Math.max(120, Math.round(rect.height || (isInlineCard ? 136 : 290)));
+
+    let viewer = null;
+    try {
+      viewer = window.AtlasStudio3D.createViewer(canvasHost, animKey, {
+        width: w,
+        height: h,
+        angle: defaultAngle,
+        speed: state.speed,
+        paused: state.paused,
+        interactive: true
+      });
+    } catch (err) {
+      // Graceful fallback to SVG if WebGL fails
+      containerEl.innerHTML = "";
+      const svgInst = createInstance(containerEl, animKey, opts);
+      state.instances.push(svgInst);
+      renderInstanceAt(svgInst, state.elapsedMs);
+      ensureLoop();
+      return svgInst;
+    }
+
+    const sInst = {
+      type: "studio",
+      mode: "live",
+      containerEl,
+      animKey,
+      def,
+      cues,
+      cueIdx: 0,
+      cueElapsedMs: 0,
+      cueTextEl,
+      cueProgressFill,
+      viewer,
+      cueTimer: null,
+      resizeObserver: null,
+      intersectionObserver: null,
+      visible: true
+    };
+
+    if (typeof ResizeObserver !== "undefined") {
+      sInst.resizeObserver = new ResizeObserver(() => {
+        if (!sInst.viewer) return;
+        const r = canvasHost.getBoundingClientRect();
+        if (r.width > 40 && r.height > 40) {
+          sInst.viewer.resize(Math.round(r.width), Math.round(r.height));
+        }
+      });
+      sInst.resizeObserver.observe(canvasHost);
+    }
+
+    if (typeof IntersectionObserver !== "undefined") {
+      sInst.intersectionObserver = new IntersectionObserver((entries) => {
+        const vis = entries.some((en) => en.isIntersecting);
+        sInst.visible = vis;
+        if (sInst.viewer) sInst.viewer.setPaused(state.paused || !vis);
+      }, { threshold: 0.05 });
+      sInst.intersectionObserver.observe(wrap);
+    }
+
+    if (!isInlineCard && cueTextEl && cueProgressFill) {
+      const STEP_MS = 200;
+      sInst.cueTimer = setInterval(() => {
+        if (!document.body.contains(wrap)) {
+          disposeStudioInst(sInst);
+          return;
+        }
+        if (state.paused || !sInst.visible) {
+          cueTextEl.textContent = def.staticCue || cues[sInst.cueIdx];
+          return;
+        }
+        sInst.cueElapsedMs += STEP_MS;
+        if (sInst.cueElapsedMs >= CUE_INTERVAL_MS) {
+          sInst.cueElapsedMs = 0;
+          sInst.cueIdx = (sInst.cueIdx + 1) % cues.length;
+          cueTextEl.textContent = cues[sInst.cueIdx];
+        }
+        const pct = Math.min(100, Math.round((sInst.cueElapsedMs / CUE_INTERVAL_MS) * 100));
+        cueProgressFill.style.width = pct + "%";
+      }, STEP_MS);
+    }
+
+    state.studioInstances.push(sInst);
+    return sInst;
+  }
+
+  function mountStudioPoster(containerEl, animKey, options) {
+    const entry = window.ATLAS_MEDIA_MANIFEST[animKey];
+    const def = window.AtlasStudio3D.exercises[animKey];
+    containerEl.innerHTML = "";
+
+    const wrap = document.createElement("div");
+    wrap.className = "studio-card-wrap";
+
+    const img = document.createElement("img");
+    img.className = "studio-card-poster";
+    img.src = entry.poster;
+    img.alt = def ? def.title : animKey;
+    img.loading = "lazy";
+    img.decoding = "async";
+    img.onerror = () => {
+      // Fallback gracefully to SVG if poster asset is missing
+      unmountContainer(containerEl);
+      const svgInst = createInstance(containerEl, animKey, options);
+      state.instances.push(svgInst);
+      renderInstanceAt(svgInst, state.elapsedMs);
+      ensureLoop();
+    };
+
+    const badge = document.createElement("span");
+    badge.className = "studio-badge-3d";
+    badge.textContent = "3D";
+
+    const playInlineBtn = document.createElement("button");
+    playInlineBtn.type = "button";
+    playInlineBtn.className = "studio-inline-btn";
+    playInlineBtn.textContent = "▶ 3D";
+    playInlineBtn.title = "הפעל הדגמת תלת־ממד חיה בתוך הכרטיס";
+    playInlineBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      unmountContainer(containerEl);
+      mountStudioLive(containerEl, animKey, options, true);
+    });
+
+    wrap.appendChild(img);
+    wrap.appendChild(badge);
+    wrap.appendChild(playInlineBtn);
+    containerEl.appendChild(wrap);
+
+    const sInst = {
+      type: "studio",
+      mode: "poster",
+      containerEl,
+      animKey,
+      viewer: null
+    };
+    state.studioInstances.push(sInst);
+    return sInst;
+  }
+
+  function unmountContainer(containerEl) {
+    if (!containerEl) return;
+    state.instances = state.instances.filter((inst) => !containerEl.contains(inst.svg));
+    for (let i = state.studioInstances.length - 1; i >= 0; i--) {
+      const sInst = state.studioInstances[i];
+      if (sInst.containerEl === containerEl || containerEl.contains(sInst.containerEl)) {
+        disposeStudioInst(sInst);
+        state.studioInstances.splice(i, 1);
+      }
+    }
+    containerEl.innerHTML = "";
+  }
 
   function tick(ts) {
     if (state.lastTs === null) state.lastTs = ts;
@@ -1017,24 +1300,49 @@
     },
     mount(containerEl, animKey, options) {
       if (!containerEl) return null;
-      const inst = createInstance(containerEl, animKey, options);
+      unmountContainer(containerEl);
+      const opts = options || {};
+      if (hasStudioMedia(animKey)) {
+        if (opts.compact) {
+          return mountStudioPoster(containerEl, animKey, opts);
+        }
+        return mountStudioLive(containerEl, animKey, opts, false);
+      }
+      const inst = createInstance(containerEl, animKey, opts);
       state.instances.push(inst);
       renderInstanceAt(inst, state.elapsedMs);
       ensureLoop();
       return inst;
     },
     unmount(containerEl) {
-      state.instances = state.instances.filter((inst) => !containerEl.contains(inst.svg));
-      containerEl.innerHTML = "";
+      unmountContainer(containerEl);
     },
     clearDetached() {
       state.instances = state.instances.filter((inst) => document.body.contains(inst.svg));
+      for (let i = state.studioInstances.length - 1; i >= 0; i--) {
+        const sInst = state.studioInstances[i];
+        if (!document.body.contains(sInst.containerEl)) {
+          disposeStudioInst(sInst);
+          state.studioInstances.splice(i, 1);
+        }
+      }
     },
     setSpeed(mult) {
       state.speed = Number(mult) || 1.0;
+      state.studioInstances.forEach((sInst) => {
+        if (sInst.viewer) sInst.viewer.setSpeed(state.speed);
+      });
     },
     setPaused(paused) {
       state.paused = Boolean(paused);
+      state.studioInstances.forEach((sInst) => {
+        if (sInst.viewer) sInst.viewer.setPaused(state.paused || !sInst.visible);
+        if (sInst.cueTextEl && sInst.def) {
+          sInst.cueTextEl.textContent = state.paused
+            ? (sInst.def.staticCue || sInst.cues[sInst.cueIdx])
+            : sInst.cues[sInst.cueIdx];
+        }
+      });
     },
     isPaused() {
       return state.paused;

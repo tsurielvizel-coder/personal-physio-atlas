@@ -318,9 +318,95 @@
     return isPlayingYt || isPlayingSynth || (prefs.source === "local" && !htmlAudio.paused);
   }
 
+  function getCurrentTrackTitle() {
+    if (prefs.source === "youtube") {
+      const tr = YOUTUBE_TRACKS.find((t) => t.id === prefs.ytTrackId);
+      return prefs.ytTrackId === "custom" ? "פלייליסט יוטיוב אישי" : (tr ? tr.title : "צמאה / הרב קוק");
+    }
+    if (prefs.source === "local" && localFiles.length) {
+      return localFiles[localIndex].name;
+    }
+    const tr = NIGGUN_TRACKS.find((t) => t.id === prefs.synthTrackId) || NIGGUN_TRACKS[0];
+    return tr.title;
+  }
+
+  function startCurrentSource() {
+    if (prefs.source === "youtube" && isHttpOrigin) startYouTube();
+    else if (prefs.source === "local" && localFiles.length) startLocalAt(localIndex);
+    else startSynth();
+  }
+
+  function togglePlayback() {
+    if (isCurrentlyPlaying()) {
+      stopAllAudio();
+    } else {
+      startCurrentSource();
+    }
+  }
+
+  function stepTrack(delta) {
+    if (prefs.source === "local" && localFiles.length) {
+      startLocalAt(localIndex + delta);
+      populateTracks();
+      return;
+    }
+    if (prefs.source === "youtube" && isHttpOrigin) {
+      const idx = Math.max(0, YOUTUBE_TRACKS.findIndex((t) => t.id === prefs.ytTrackId));
+      const nextIdx = ((idx + delta) % YOUTUBE_TRACKS.length + YOUTUBE_TRACKS.length) % YOUTUBE_TRACKS.length;
+      prefs.ytTrackId = YOUTUBE_TRACKS[nextIdx].id;
+      savePrefs();
+      populateTracks();
+      startYouTube();
+      return;
+    }
+    const idx = Math.max(0, NIGGUN_TRACKS.findIndex((t) => t.id === prefs.synthTrackId));
+    const nextIdx = ((idx + delta) % NIGGUN_TRACKS.length + NIGGUN_TRACKS.length) % NIGGUN_TRACKS.length;
+    prefs.synthTrackId = NIGGUN_TRACKS[nextIdx].id;
+    savePrefs();
+    populateTracks();
+    startSynth();
+  }
+
+  function updateMediaSession() {
+    if (!("mediaSession" in navigator)) return;
+    try {
+      const playing = isCurrentlyPlaying();
+      navigator.mediaSession.playbackState = playing ? "playing" : "paused";
+      if (typeof MediaMetadata !== "undefined") {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: getCurrentTrackTitle(),
+          artist: "אטלס-פיזיו • מוזיקת אימון",
+          album: prefs.source === "local" ? "MP3 מהמכשיר" : prefs.source === "youtube" ? "יוטיוב" : "ניגון אופליין"
+        });
+      }
+    } catch (e) {
+      // ignore unsupported MediaSession fields
+    }
+  }
+
+  function initMediaSessionHandlers() {
+    if (!("mediaSession" in navigator)) return;
+    const bind = (action, fn) => {
+      try { navigator.mediaSession.setActionHandler(action, fn); } catch (e) {}
+    };
+    bind("play", () => { if (!isCurrentlyPlaying()) startCurrentSource(); });
+    bind("pause", () => stopAllAudio());
+    bind("stop", () => stopAllAudio());
+    bind("nexttrack", () => stepTrack(1));
+    bind("previoustrack", () => stepTrack(-1));
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (isPlayingSynth && audioCtx && audioCtx.state === "suspended") {
+      audioCtx.resume().catch(() => {});
+    }
+  });
+
   htmlAudio.addEventListener("ended", () => {
     if (localFiles.length > 0) startLocalAt(localIndex + 1);
   });
+  htmlAudio.addEventListener("play", updateUI);
+  htmlAudio.addEventListener("pause", updateUI);
 
   function populateTracks() {
     const select = document.getElementById("musicTrackSelect");
@@ -368,25 +454,54 @@
     }
   }
 
+  function syncOverlayVisibility() {
+    const bubble = document.getElementById("musicFloatBubble");
+    if (!bubble) return;
+    const playing = isCurrentlyPlaying();
+    const coachModal = document.getElementById("coachModal");
+    const coachOpen = Boolean(coachModal && coachModal.classList.contains("open"));
+    bubble.classList.toggle("visible", playing || coachOpen);
+    bubble.classList.toggle("is-playing", playing);
+    bubble.classList.toggle("coach-open", coachOpen);
+  }
+
   function updateUI() {
     const playBtn = document.getElementById("musicPlayPauseBtn");
     const statusLabel = document.getElementById("musicNowPlayingLabel");
-    if (!playBtn || !statusLabel) return;
-
     const playing = isCurrentlyPlaying();
-    playBtn.textContent = playing ? "⏸️ עצור מוזיקה" : "▶️ נגן מוזיקה";
-    playBtn.classList.toggle("active", playing);
+    const trackTitle = getCurrentTrackTitle();
 
-    if (prefs.source === "youtube") {
-      const tr = YOUTUBE_TRACKS.find((t) => t.id === prefs.ytTrackId);
-      const label = prefs.ytTrackId === "custom" ? "פלייליסט יוטיוב אישי" : (tr ? tr.title : "צמאה / הרב קוק");
-      statusLabel.textContent = (playing ? "📺 מתנגן: " : "יוטיוב מוכן: ") + label;
-    } else if (prefs.source === "local" && localFiles.length) {
-      statusLabel.textContent = (playing ? "🎵 MP3: " : "MP3 מוכן: ") + localFiles[localIndex].name;
-    } else {
-      const tr = NIGGUN_TRACKS.find((t) => t.id === prefs.synthTrackId) || NIGGUN_TRACKS[0];
-      statusLabel.textContent = (playing ? "🎶 מנגן: " : "ניגון מוכן: ") + tr.title;
+    if (playBtn && statusLabel) {
+      playBtn.textContent = playing ? "⏸️ עצור מוזיקה" : "▶️ נגן מוזיקה";
+      playBtn.classList.toggle("active", playing);
+
+      if (prefs.source === "youtube") {
+        statusLabel.textContent = (playing ? "📺 מתנגן: " : "יוטיוב מוכן: ") + trackTitle;
+      } else if (prefs.source === "local" && localFiles.length) {
+        statusLabel.textContent = (playing ? "🎵 MP3: " : "MP3 מוכן: ") + trackTitle;
+      } else {
+        statusLabel.textContent = (playing ? "🎶 מנגן: " : "ניגון מוכן: ") + trackTitle;
+      }
     }
+
+    const coachMusicBtn = document.getElementById("coachMusicToggleBtn");
+    if (coachMusicBtn) {
+      coachMusicBtn.textContent = playing ? "⏸️ עצור מוזיקה" : "🎵 נגן מוזיקה";
+      coachMusicBtn.classList.toggle("active", playing);
+    }
+
+    const floatPlayBtn = document.getElementById("floatMusicPlayBtn");
+    const floatTitleEl = document.getElementById("floatMusicTitle");
+    if (floatPlayBtn) {
+      floatPlayBtn.textContent = playing ? "⏸️" : "▶️";
+      floatPlayBtn.setAttribute("aria-label", playing ? "עצור מוזיקה" : "נגן מוזיקה");
+    }
+    if (floatTitleEl) {
+      floatTitleEl.textContent = trackTitle;
+    }
+
+    syncOverlayVisibility();
+    updateMediaSession();
   }
 
   function init() {
@@ -455,18 +570,29 @@
 
     const playBtn = document.getElementById("musicPlayPauseBtn");
     if (playBtn) {
-      playBtn.addEventListener("click", () => {
-        if (isCurrentlyPlaying()) {
-          stopAllAudio();
-        } else if (prefs.source === "youtube" && isHttpOrigin) {
-          startYouTube();
-        } else if (prefs.source === "local" && localFiles.length) {
-          startLocalAt(localIndex);
-        } else {
-          startSynth();
-        }
+      playBtn.addEventListener("click", togglePlayback);
+    }
+
+    const coachMusicBtn = document.getElementById("coachMusicToggleBtn");
+    if (coachMusicBtn) {
+      coachMusicBtn.addEventListener("click", togglePlayback);
+    }
+
+    const floatPlayBtn = document.getElementById("floatMusicPlayBtn");
+    const floatNextBtn = document.getElementById("floatMusicNextBtn");
+    const floatMinBtn = document.getElementById("floatMusicMinBtn");
+    const floatBubble = document.getElementById("musicFloatBubble");
+    if (floatPlayBtn) floatPlayBtn.addEventListener("click", togglePlayback);
+    if (floatNextBtn) floatNextBtn.addEventListener("click", () => stepTrack(1));
+    if (floatMinBtn && floatBubble) {
+      floatMinBtn.addEventListener("click", () => {
+        const mini = floatBubble.classList.toggle("minimized");
+        floatMinBtn.textContent = mini ? "🎵" : "—";
+        floatMinBtn.title = mini ? "הרחב נגן צף" : "מזער לבועה";
       });
     }
+
+    initMediaSessionHandlers();
 
     const hideYtBtn = document.getElementById("ytHideMiniBtn");
     if (hideYtBtn) {
@@ -559,11 +685,14 @@
 
   window.AtlasMusic = {
     init,
+    toggle: togglePlayback,
+    isPlaying: isCurrentlyPlaying,
+    nextTrack: () => stepTrack(1),
+    prevTrack: () => stepTrack(-1),
+    syncOverlayVisibility,
     playIfAutoEnabled() {
       if (!prefs.autoPlayCoach || isCurrentlyPlaying()) return;
-      if (prefs.source === "youtube" && isHttpOrigin) startYouTube();
-      else if (prefs.source === "local" && localFiles.length) startLocalAt(localIndex);
-      else startSynth();
+      startCurrentSource();
     },
     stop: stopAllAudio
   };

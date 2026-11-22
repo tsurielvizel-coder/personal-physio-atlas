@@ -914,7 +914,10 @@
     document.getElementById("coachRestSecSelect").value = String(state.restSec || 25);
     document.getElementById("coachModal").classList.add("open");
     renderCoachStep();
-    if (Music) Music.playIfAutoEnabled();
+    if (Music) {
+      Music.playIfAutoEnabled();
+      if (Music.syncOverlayVisibility) Music.syncOverlayVisibility();
+    }
   }
 
   function launchCoachPreset(preset) {
@@ -947,6 +950,7 @@
     document.getElementById("coachModal").classList.remove("open");
     const canvas = document.getElementById("coachCanvas");
     if (Animator && canvas) Animator.unmount(canvas);
+    if (Music && Music.syncOverlayVisibility) Music.syncOverlayVisibility();
   }
 
   // Event Bindings
@@ -1212,4 +1216,48 @@
       showToast
     });
   }
+
+  // PWA Offline Service Worker (only on http/https; safe no-op on file://)
+  (function initOfflineCache() {
+    const btn = document.getElementById("offlineCacheBtn");
+    const isHttp = window.location.protocol === "http:" || window.location.protocol === "https:";
+    if (!isHttp || !("serviceWorker" in navigator)) {
+      if (btn) {
+        btn.textContent = "✅ אופליין מקומי";
+        btn.classList.add("green");
+        btn.addEventListener("click", () => {
+          showToast("✅ האפליקציה והמודל 3D פועלים כבר 100% אופליין מהמחשב!");
+        });
+      }
+      return;
+    }
+
+    navigator.serviceWorker.register("./sw.js").then((reg) => {
+      if (btn) {
+        btn.textContent = "✅ זמין אופליין";
+        btn.classList.add("green");
+        btn.addEventListener("click", () => {
+          const worker = reg.active || reg.waiting || reg.installing;
+          if (worker) {
+            btn.textContent = "⏳ שומר אופליין...";
+            worker.postMessage({ type: "ATLAS_CACHE_ALL" });
+          } else {
+            showToast("✅ כל הקבצים והדמיית ה-3D כבר שמורים במכשיר לאופליין!");
+          }
+        });
+      }
+    }).catch(() => {
+      if (btn) btn.style.display = "none";
+    });
+
+    navigator.serviceWorker.addEventListener("message", (ev) => {
+      if (ev.data && ev.data.type === "ATLAS_CACHE_DONE") {
+        if (btn) {
+          btn.textContent = "✅ זמין אופליין";
+          btn.classList.add("green");
+        }
+        showToast("✅ האפליקציה ומודל ה-3D נשמרו לאופליין (0 תעבורת נתונים חוזרת)!");
+      }
+    });
+  })();
 })();
